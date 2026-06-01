@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+        "imagekit_public_mcp": {
+            "url": "https://devtools-mcp.imagekit.io/mcp"
+        },
+        "imagekit_api": {
+            "url": "https://api-mcp.imagekit.in/sse"
+        }
+    }
+}
