@@ -60,7 +60,7 @@ npx skills add imagekit-developer/skills --all
 Run the following command in your terminal:
 
 ```bash
-claude mcp add imagekit_devtools https://devtools-mcp.imagekit.io/mcp
+claude mcp add imagekit_devtools --transport http https://devtools-mcp.imagekit.io/mcp
 claude mcp add imagekit_api --transport http https://api-mcp.imagekit.in/mcp
 ```
 
