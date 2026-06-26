@@ -343,19 +343,20 @@ for (let skip = 0; ; skip += 100) {
   }
 }
 
-// Error handling — in execute/MCP code, do NOT try/catch single calls; the tool
-// reports errors for you. When you must branch on a failure, duck-type the error.
-// A value import of the SDK (import ImageKit from '@imagekit/nodejs') is NOT
-// available in the Deno sandbox and throws at runtime, so do not rely on
-// `instanceof ImageKit.APIError`.
+// Error handling — in execute/MCP code you normally DON'T need try/catch: let the
+// error propagate and the tool reports it for you. The ONLY reason to catch is to
+// branch on a specific failure (e.g. treat 404 as "not found") — and then you must
+// re-throw everything you don't handle. Duck-type the error: a value import of the
+// SDK (import ImageKit from '@imagekit/nodejs') is NOT available in the Deno sandbox
+// and throws at runtime, so don't rely on `instanceof ImageKit.APIError`.
 try {
-  await client.files.get('bad-id');
+  return await client.files.get(fileId);
 } catch (err) {
   if (err && typeof err === 'object' && 'status' in err) {
     const e = err as { status?: number; message?: string };
-    e.status;  // 400 | 401 | 403 | 404 | 409 | 422 | 429 | 5xx
-    e.message;
+    if (e.status === 404) return null;  // the one case we handle
   }
+  throw err;  // re-throw anything else — don't swallow it
 }
 // Auto-retries: connection errors, 408/409/429/5xx — up to 2× with exponential backoff
 ```
