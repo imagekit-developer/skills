@@ -360,3 +360,35 @@ try {
 }
 // Auto-retries: connection errors, 408/409/429/5xx — up to 2× with exponential backoff
 ```
+
+## Parallel Execution for Bulk File Operations
+
+When you have a list of files to operate on, never await in a loop. Chunk into batches of 100 and run each batch concurrently with Promise.allSettled().
+
+```typescript
+// ✅ files is any array of { fileId, name } — from assets.list(), a prior search, etc.
+const CHUNK = 100;
+const chunks = [];
+for (let i = 0; i < files.length; i += CHUNK) chunks.push(files.slice(i, i + CHUNK));
+
+for (const chunk of chunks) {
+  await Promise.allSettled(
+    chunk.map(({ fileId, name }) =>
+      client.files.update(fileId, { tags: ['promo'] })
+        .then(() => ({ fileId, name, status: 'ok' }))
+        .catch((err: unknown) => ({ fileId, name, status: 'error', error: String(err) }))
+    )
+  );
+}
+```
+
+Same pattern applies for files.delete(fileId), files.copy({...}), and files.move({...}).
+
+For delete / addTags / removeTags, prefer the bulk endpoints (max 50 IDs each) — chunk IDs and run chunks in parallel:
+
+```typescript
+const CHUNK = 50;
+const chunks = [];
+for (let i = 0; i < allFileIds.length; i += CHUNK) chunks.push(allFileIds.slice(i, i + CHUNK));
+await Promise.allSettled(chunks.map(ids => client.files.bulk.delete({ fileIds: ids })));
+```

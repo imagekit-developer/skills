@@ -7,6 +7,8 @@ description: "MANDATORY: Read this whenever calling client.assets.list() with a 
 
 `client.assets.list({ searchQuery })` takes a Lucene-like filter string. A good query is the difference between one precise API call and paging through everything. This skill is the cheatsheet for building that string.
 
+When user requests "find Nike brand images", here brand could be a custom metadata field, i.e. `"customMetadata.brand"`. So it is always recommended to first list the custom metadata fields available so that correct `searchQuery` can be constructed. You can use `client.customMetadataFields.list()` to get the list of custom metadata fields and their types.
+
 ## Syntax
 
 - **Operators:** `=` `:` `<` `<=` `>` `>=` `IN` `NOT IN` `NOT =` `HAS` `EXISTS` `NOT EXISTS`
