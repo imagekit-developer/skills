@@ -1,6 +1,6 @@
 ---
 name: search-assets
-description: "MANDATORY: Read this whenever calling client.assets.list() with a searchQuery, or when searching/filtering/listing ImageKit files or folders. Covers the Lucene-like searchQuery filter syntax, operators, field reference, and examples for filtering by name, tags, date, size, format, path, or custom/embedded metadata."
+description: "Reference for ImageKit's Lucene-like searchQuery syntax — operators, field reference, and examples for filtering files and folders by name, tags, date, size, format, path, or custom/embedded metadata, plus how to narrow the returned results. Use when calling client.assets.list() with a searchQuery or when searching, filtering, or listing assets."
 ---
 
 # ImageKit Search Queries (`searchQuery`)
@@ -119,6 +119,17 @@ for (const item of result) {
 }
 ```
 
+**Accessing ANY member-specific property.** On the bare `File | Folder` union you can only read properties common to *both* (`name`, `type`, `createdAt`, `updatedAt`, `customMetadata`). Every other property — `filePath`, `url`, `fileId`, `size`, `width`, `tags`… (File-only) and `folderPath` (Folder-only) — exists on just one member and won't compile until you narrow `item` to a single concrete type. Narrow **once** with an `if`/`else`, then access anything inside that block. Key subtlety: `File.type` is `'file' | 'file-version'` while `Folder.type` is only `'folder'`, so branch on `type === 'folder'` — its else branch is guaranteed `File` (covers plain files *and* file-versions):
+```typescript
+const rows = result.map((item) => {
+  if (item.type === 'folder') {
+    return { name: item.name, kind: 'folder', path: item.folderPath }; // item: Folder
+  }
+  return { name: item.name, kind: 'file', path: item.filePath, size: item.size, url: item.url }; // item: File
+});
+```
+Only reading File fields? A single `if (item.type === 'file') { … }` guard is enough — inside it `item` is a fully-typed `File`, so any File property is available.
+
 **Full-text search — always pair `HAS` with `DESC_RELEVANCE`:**
 ```typescript
 const result = await client.assets.list({
@@ -148,6 +159,9 @@ for (let skip = 0; ; skip += 100) {
 ## Gotchas
 
 - **`searchQuery` overrides params.** When `searchQuery` is present, the top-level `type`, `tags`, and `name` params have NO effect — express those filters inside the query string instead (e.g. `type = "file"`).
+- **Narrow with `for...of` + `if`, not `.filter((i): i is File => ...)`.** In the Deno/MCP sandbox the global `File` (Web API) shadows the SDK's `File` type, so the type predicate fails to compile. Use `for (const item of result) { if (item.type === 'file') { … } }`.
+- **Only common fields exist on the bare `File | Folder` union.** `name`, `type`, `createdAt`, `updatedAt`, `customMetadata` are shared; everything else (`filePath`, `url`, `fileId`, `size`, `width`, `tags`, `folderPath`…) is member-specific and needs narrowing first. Never reach for a property before narrowing.
+- **Branch on `type === 'folder'` to split the union cleanly.** `File.type` is `'file' | 'file-version'`; `Folder.type` is only `'folder'`. So `type === 'file'` catches plain files but leaves the else branch as `File | Folder`, whereas `type === 'folder'` gives `Folder` in the `if` and a guaranteed `File` in the `else`.
 - `name` `=`/`:` are **case-sensitive**; use `HAS` for case-insensitive matching.
 - `tags` queries search **both** `tags` and `AITags`.
 - `HAS` tokenizes on spaces/punctuation; the last token matches as a prefix (`"red"` matches `redwoods`). Pair with `sort: 'DESC_RELEVANCE'`.

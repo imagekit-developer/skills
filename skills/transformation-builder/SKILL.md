@@ -1,248 +1,225 @@
 ---
 name: transformation-builder
-description: "MANDATORY PRE-STEP: You MUST read and follow this skill BEFORE calling the `transformation_builder` tool. This skill teaches you how to identify the correct ImageKit capability, craft precise queries, and handle multi-step transformations. Covers AI editing (change objects, colors, styles), background removal/replacement, generative fill, upscaling, retouching, resize, crop, overlays, text overlays, blur, sharpen, rotate, borders, shadows, color replace, and all visual modifications. Never call the transformation_builder MCP tool without first consulting this skill."
+description: "Guidance for building ImageKit image/video transformation URLs with the transformation_builder tool — how the tool works, how to write a good query, how to order multi-step chains, and a reference of every supported parameter. Use before calling transformation_builder. Covers resize/crop/focus, AI edits (change objects, colors, styles), background removal/replacement, generative fill, upscaling, retouching, drop shadows, variations, effects (blur/sharpen/rotate/border/color-replace/gradient), image/text/video overlays, and video transforms."
 ---
 
 # Transformation Builder Skill
 
-## IMPORTANT: Read This BEFORE Calling the Tool
+Understand how the tool works, write a precise query, order multi-step chains correctly, then call `transformation_builder`.
 
-This skill MUST be invoked and read before you call `transformation_builder`. It contains critical instructions for identifying the right capability, crafting precise queries, and ordering multi-step transformations that determine whether the tool produces correct results.
+## How this tool actually works (read this first)
 
-**Workflow:**
-1. Agent reads this skill (you are here)
-2. Agent identifies the correct capability using the Intent → Capability Mapping below
-3. Agent crafts a precise query using the Query Crafting Guide
-4. Agent calls `transformation_builder` with the prepared query
-5. Agent handles results or failures following the rules below
+`transformation_builder` is **not** a capability picker. Its only inputs are:
+
+```
+transformation_builder(query, src?, previous_errors?)
+```
+
+- `query` — a **natural-language** description of the desired transformation.
+- `src` — optional ImageKit-hosted source URL (defaults to a sample image).
+- `previous_errors` — pass the error text from a prior failed call so the tool can self-correct.
+
+Internally the tool: (1) searches ImageKit docs using your `query`, (2) an LLM turns it into a validated list of transformation steps, (3) the SDK builds the final URL. There is **no `capability` argument** — the parameter names below are **vocabulary to put into your query**, not API fields you set directly. Because step 1 is a doc search over your query text, **using the correct ImageKit parameter names and values in the query materially improves the result.** Using wrong/invented names sends the search off course.
+
+So your job is: translate the user's vague request into a precise query that references **real** parameters and values from the reference section below.
 
 ## When to use (triggers this skill)
-- User requests resize, crop, or focus on specific areas
-- User wants filters, overlays, or visual effects
-- User describes multi-step transformation chains
-- User needs background removal (especially with upscaling)
-- User wants AI-powered image editing of any kind
 
-## Background Removal: Clarify Intent
-
-When user says "remove background" without specifying the approach, **ask which option they prefer**:
-
-1. **Real-time URL transformation** — Applies `e-bgremove` via transformation URL. Best for on-the-fly delivery, no new file stored.
-2. **Remove and upload** — Applies background removal extension and uploads the result to DAM as new file version.
-
-## Change background to something else: Clarify Intent
-
-Only apply `ai_changebg` if the user wants to replace the background with a new scene or design. If they just want to remove the background and change color or keep it transparent, use or `ai_remove_background` or `ai_removedotbg` instead.
-
-## Critical: Background Removal Sequence
-
-**ALWAYS apply background removal AFTER upscale/retouch, NEVER before.**
-
-Correct: `Upscale -> Then remove background`
-Wrong: `Remove background -> Then upscale`
-
-Use `e-bgremove` (not `ai_remove_background`) for background removal.
+- Resize, crop, or focus on a region
+- Filters, effects, overlays (image/text/video), watermarks
+- Multi-step transformation chains
+- Background removal, replacement, or generative fill
+- Any AI-powered image editing (change objects/colors/styles, upscale, retouch, drop shadow, variations)
 
 ## Calling `transformation_builder`
 
-After reading this skill and preparing your query, call the tool with:
-- `query`: The precise, rewritten query (see Query Crafting Guide below — NEVER pass vague user input directly)
-- `src`: Optional source URL (defaults to sample image)
+- `query`: the precise, rewritten description (see Query Crafting). **Never pass the user's vague words through unchanged.**
+- `src`: the ImageKit delivery URL to transform, if the user gave one. Must be ImageKit-hosted.
+- Frame a multi-step request as **one query** describing the steps in order:
+  - User: "1) Resize to 800x600  2) Crop to the face"
+  - Query: "Resize to width 800 and height 600, then crop with focus on the face"
 
-**Chain transformations**: Frame multi-step requests as a single query.
-- User: "1) Resize to 800x600 2) Crop to face"
-- Query: "Resize to 800x600, then crop to focus on face"
+## Query Crafting
 
-## Query Routing & Crafting Guide
+**Rule: rewrite the vague request into a description that names real parameters and values. Use exact parameter names/values when you know them; fall back to plain English only when unsure.**
 
-Users describe what they want in vague, everyday language. Your job is to **identify the right IK capability** and **rewrite the query** into a precise, tool-friendly description. Never pass vague queries through as-is.
-
-### Intent → Capability Mapping
-
-Use this table to decide which capability handles the user's request:
-
-| User Intent (vague) | Maps To | Why |
+| User says | Weak query | Good query |
 |---|---|---|
-| "Make the red balls green", "enlarge the cat", "remove the car", "add sunglasses" | `ai_edit` | Modifying **specific objects or regions** within the image requires AI content editing |
-| "Put this on a beach", "change background to sunset", "make it look like they're in Paris" | `ai_changebg` | Replacing the **background scene** while keeping the subject. Adds new scene elements defined by prompt. Should not be used for simple background removal or color changes. |
-| "Remove the background", "make it transparent", "cut out the person" | `ai_remove_background` | Removing the background entirely (transparent output) |
-| "Make it wider without stretching", "extend the sky", "add more space on the left" | `ai_bg_genfill` | Expanding the image canvas with **AI-generated content** beyond original bounds |
-| "Make it higher resolution", "it's blurry can you fix it", "enhance quality" | `ai_upscale` | Increasing resolution / fixing low-res images |
-| "Clean up this photo", "remove blemishes", "fix skin imperfections" | `ai_retouch` | General visual quality improvement and artifact removal |
-| "Add a realistic shadow", "make the product look like it's on a surface" | `ai_drop_shadow` | Adding natural-looking shadows (transparent images only) |
-| "Create a variation", "give me a different version", "remix this image" | `ai_genvar` | Generating visual variations while preserving structure |
-| "Generate an image of a sunset over mountains" | `ai_gen_image` | Creating a brand new image from text (no source image needed) |
-| "Make it 800x600", "resize for Instagram", "make it smaller", "crop to 16:9" | `resize_and_crop` | Changing overall **dimensions, aspect ratio, or crop** of the image |
-| "Focus on the face", "crop around the product", "zoom into the subject" | `resize_and_crop` (with `focus`) | Smart cropping using face/object detection |
-| "Change all red pixels to blue", "swap the background color from white to gray" | `color_replace` (effects) | Global **pixel-level color swap** across the entire image |
-| "Make it black and white", "blur it", "sharpen", "rotate 90°", "add a border" | `effects_and_enhancement` | Standard image filters and adjustments |
-| "Add my logo on top", "put a watermark", "overlay this badge" | `image_overlay` | Compositing another image on top |
-| "Write 'SALE 50% OFF' on the image", "add a caption" | `text_overlay` | Rendering text on the image |
+| "Make the red balls green" | "make red balls green" | "Apply an AI edit (`ai_edit`) with prompt: change the red balls to green" |
+| "Clean it up and put it on white" | "clean up, white background" | "Apply `ai_retouch`, then `ai_remove_background` with white background color" |
+| "Make it look like a painting" | "painting style" | "Apply `ai_edit` with prompt: oil-painting style with visible brush strokes" |
+| "Crop around the face" | "crop face" | "Resize with `focus`=`face` to crop around the detected face" |
+| "Text 'Hello' at the bottom" | "add hello text" | "Add a text overlay with text 'Hello', positioned at the bottom (`focus`=`bottom`)" |
+| "Fit a mobile banner" | "mobile banner" | "Resize to `width`=640 with `aspect_ratio`=2-1" |
+| "300px wide with a red border" | "resize and border" | "Resize to `width`=300, then add a `border` of width 5 and color red" |
+| "Higher resolution, it's blurry" | "fix quality" | "Apply `ai_upscale`, then `ai_retouch`" |
+| "Remove bg and add a shadow" | "remove bg shadow" | "Apply `ai_remove_background`, then `ai_drop_shadow`" |
+| "Make it wider without stretching" | "make wider" | "Extend the canvas horizontally using a padded crop (`crop_mode`=`pad_extract`) with `background`=`genfill` so AI fills the new area" |
 
-### Key Distinction: `ai_edit` vs `color_replace` vs `ai_changebg`
+### Intent → real parameter/vocabulary
 
-These three are commonly confused. Use this decision tree:
+Use this to translate intent into the correct terms to put in the query. These are the **actual** parameter names the tool validates against.
 
-1. **Is the user changing specific objects/regions?** (e.g. "make the balls bigger", "turn the car red") → **`ai_edit`**
-2. **Is the user swapping a color globally across all pixels?** (e.g. "replace all #FF0000 with #00FF00") → **`color_replace`**
-3. **Is the user replacing the entire background scene?** (e.g. "put them on a beach") → **`ai_changebg`**
-
-### How to Craft Good Queries
-
-**Rule: Always rewrite the user's vague request into a query that references actual IK parameters and capabilities. Use parameter names when you know them; fall back to descriptive English only when the exact parameter is unclear.**
-
-| User Says | Bad Query (don't do this) | Good Query |
+| User intent | Use this vocabulary | Notes |
 |---|---|---|
-| "Make the red balls bigger and the blue ones green" | "make red balls bigger and blue balls green" | "Apply `ai_edit` with prompt: increase the size of the red-colored balls and change the blue-colored balls to green" |
-| "Can you clean this up and put it on a white background?" | "clean up and white background" | "Apply `ai_retouch`, then `ai_remove_background`, then `ai_changebg` with prompt: solid white background" |
-| "I want this to look like a painting" | "make it look like a painting" | "Apply `ai_edit` with prompt: transform into an oil painting style with visible brush strokes and artistic texture" |
-| "Crop around the person's face" | "crop face" | "Apply `resize_and_crop` with `focus` set to `face` to crop around the detected face" |
-| "Add some text saying Hello World at the bottom" | "add hello world text" | "Apply `text_overlay` with `text`='Hello World', `layer_y`=bottom, `layer_focus`=bottom" |
-| "Make this fit for a mobile banner" | "mobile banner" | "Apply `resize_and_crop` with `width`=640, `aspect_ratio`=2-1" |
-| "The background is boring, make it interesting" | "change background" | "Apply `ai_changebg` with prompt: vibrant gradient studio backdrop" |
-| "Extend the image to make it panoramic" | "make panoramic" | "Apply `ai_bg_genfill` to extend image horizontally with `aspect_ratio`=3-1" |
-| "This is too low quality" | "fix quality" | "Apply `ai_upscale`, then `ai_retouch`" |
-| "Make it 300px wide and add a red border" | "resize and border" | "Apply `resize_and_crop` with `width`=300, then apply `border` with color red and width 5" |
-| "Blur everything and put white text on top" | "blur and text" | "Apply `blur`=10, then `text_overlay` with `text`='Your Text', `color`=white, `font_size`=40, `layer_focus`=center" |
-| "Remove background and add a drop shadow" | "remove bg shadow" | "Apply `ai_remove_background`, then `ai_drop_shadow`" |
+| Modify specific objects/regions ("enlarge the cat", "add sunglasses", "make it a painting") | `ai_edit` (prompt-based) | AI content edit driven by a text prompt |
+| Replace the whole background scene ("put them on a beach") | `ai_change_background` (prompt-based) | Keeps the subject, generates a new scene. Not for plain removal or color changes |
+| Remove background → transparent | `ai_remove_background` | ImageKit-native. For the external remove.bg engine use `ai_remove_background_external` |
+| Extend/outpaint the canvas ("add more sky", "make it panoramic") | padded crop + `background`=`genfill` | Generative fill lives in the **background** param, not a standalone AI field. Takes **no prompt** |
+| Increase resolution / fix low-res | `ai_upscale` | Boolean; no params |
+| Clean up / remove blemishes | `ai_retouch` | Boolean; no params |
+| Realistic shadow under a cut-out subject | `ai_drop_shadow` | Transparent images only. Optional `azimuth`, `elevation`, `strength` |
+| Different version / remix | `ai_variation` | Boolean; preserves structure |
+| Resize / aspect ratio / crop | `width`, `height`, `aspect_ratio`, `crop`, `crop_mode` | See Resize & Crop table |
+| Smart crop to face/object | `focus` (`auto`, `face`, or an object name) + optional `zoom` | Object names are COCO classes (`person`, `car`, `dog`, …) |
+| Swap one color across all pixels ("all red → blue") | `color_replace` | Global pixel color swap with `tolerance` |
+| Filters/adjustments (B&W, blur, sharpen, rotate, border, round corners) | `grayscale`, `blur`, `sharpen`, `rotation`, `border`, `radius`, … | See Effects table |
+| Overlay a logo/watermark image | text/image **overlay** | Single `overlay` concept, typed (see Overlays) |
+| Write text on the image | text **overlay** with `text` | See Overlays |
 
-### Multi-Step Query Chaining
+> There is **no** "generate an image from scratch" step in this tool — it always transforms an existing `src`. To generate images from scratch, use text-to-image generation in the ImageKit DAM (Digital Asset Manager), which is a separate feature from `transformation_builder`.
 
-When the user's request involves multiple capabilities, **chain them in one query in the correct order**:
+### Key distinction: `ai_edit` vs `color_replace` vs `ai_change_background`
 
-1. **Upscale / Retouch first** (quality improvements)
-2. **AI edits** (content changes) 
-3. **Background removal / change** (always after content edits)
-4. **Resize / Crop** (final dimensions)
-5. **Effects / Overlays** (finishing touches)
+1. Changing specific objects/regions ("make the balls bigger", "turn the car red") → **`ai_edit`**
+2. Swapping one color globally across all pixels ("replace all red with blue") → **`color_replace`**
+3. Replacing the entire background scene ("put them on a beach") → **`ai_change_background`**
 
-Example: User says "clean up this photo, remove the background, and make it 500x500"
-→ Query: "Apply `ai_retouch`, then `ai_remove_background`, then `resize_and_crop` with `width`=500, `height`=500"
+## Ordering multi-step chains
 
-## Handling Failures
+When a request spans multiple operations, chain them in **one query in this order**:
 
-1. **400 / Bad Request**: Invoke the `search-docs` skill first, then call `search_docs` for parameters/limits
-2. **Multiple failures (3+)**: Invoke `search-docs` skill, then call `search_docs` to find supported methods and constraints
-3. **Unsupported**: Search docs to confirm, offer alternatives if available
+1. **Upscale / retouch** (quality first)
+2. **AI content edits** (`ai_edit`)
+3. **Background removal / replacement** (`ai_remove_background`, `ai_change_background`)
+4. **Resize / crop** (final dimensions)
+5. **Effects / overlays** (finishing touches)
+
+**Critical: background removal goes AFTER upscale/retouch, never before.**
+Correct: `ai_upscale → ai_remove_background`. Wrong: `ai_remove_background → ai_upscale`.
+
+Example — "clean up this photo, remove the background, make it 500x500":
+→ Query: "Apply `ai_retouch`, then `ai_remove_background`, then resize to `width`=500 and `height`=500".
+
+## Background removal: clarify intent
+
+- If the user says "remove background" ambiguously, ask whether they want:
+  1. **Real-time URL** — `ai_remove_background` in a delivery URL (nothing stored).
+  2. **Remove and save** — apply the background-removal extension and upload the result as a new file version (a media-library operation, not this tool).
+- Only use `ai_change_background` when they want a **new** background scene. For a plain transparent cut-out or a solid color, use `ai_remove_background` (optionally followed by `background`=a color).
+
+## Handling failures
+
+1. **400 / Bad Request or validation error**: refine the query and retry, passing the error text as `previous_errors`. Invoke the `search-docs` skill and call `search_docs` to confirm supported parameters/limits.
+2. **3+ failures**: use `search-docs` to find supported methods and constraints before retrying.
+3. **Unsupported**: confirm via docs and offer the closest supported alternative.
 
 ## Gotchas
 
-- Background removal order matters: upscale/retouch first
-- Source URL must be ImageKit-hosted
+- Source URL must be ImageKit-hosted.
+- Background removal order matters (upscale/retouch first).
+- Generative fill = `background`=`genfill` on a padded/enlarged canvas; it takes no prompt. `ai_change_background` is the prompt-driven one.
+- `ai_drop_shadow` needs a transparent subject (run `ai_remove_background` first).
+- Negative offsets/rotation are written with an `N` prefix in the final URL (the tool handles this) — just describe the value normally.
 
-## IK Transformation Parameters Reference
+---
 
-### Resize & Crop (`resize_and_crop`)
+## Parameter reference
 
-| IK Parameter | What It Does |
+These are the real names/values the tool validates. Put them into your query.
+
+### Resize & crop
+
+| Parameter | What it does |
 |---|---|
-| `width` | Output width. If only width is provided, height auto-scales to preserve aspect ratio. Accepts integer (px), decimal 0–1 (percentage), or arithmetic expression. |
-| `height` | Output height. If only height is provided, width auto-scales to preserve aspect ratio. Accepts integer (px), decimal 0–1 (percentage), or arithmetic expression. |
-| `aspect_ratio` | Sets aspect ratio (width:height). Must be used with either width or height; ignored if both are provided. |
-| `crop_mode` | Controls resize/crop behavior: `pad_resize` (fit within dimensions with padding), `extract` (extract fixed region), `pad_extract` (padded extract). |
-| `crop` | Controls crop strategy: `force` (exact resize, ignores aspect ratio), `at_max_enlarge` (resize at max without enlarging), `at_least` (cover minimum dimensions), `maintain_ratio` (preserve ratio). |
-| `focus` | Focal point for cropping. Values: `custom` (predefined area), `auto` (smart crop), `face` (face detection), or an object name for object detection. |
-| `zoom` | Controls zoom level around the focused area during face/object-based cropping. |
-| `x`, `y`, `x_center`, `y_center` | Coordinates for `cm_extract`: `x`/`y` set top-left corner; `x_center`/`y_center` set center of extracted region. |
-| `dpr` | Device pixel ratio — scales output dimensions for high-DPR displays (e.g. Retina). |
-| `background` | Background color for padded areas. Supports hex, named colors, blurred background, and dominant color modes. |
+| `width` | Output width. Integer px, decimal 0–1 (fraction of original), or an arithmetic expression. |
+| `height` | Output height. Same formats as `width`. |
+| `aspect_ratio` | Aspect ratio (e.g. `16-9`). Use with `width` **or** `height`; ignored if both are set. |
+| `crop` | Resize strategy: `force`, `at_max`, `at_max_enlarge`, `at_least`, `maintain_ratio`, `maintain_ratio_no_enlarge`. |
+| `crop_mode` | Pad/extract behavior: `pad_resize`, `extract`, `pad_extract`, `pad_resize_no_enlarge`, `pad_extract_no_shrink`. |
+| `focus` | Focal point: `auto`, `face`, `custom`, a directional position (`center`, `top`, `left`, `bottom_right`, …), or an object name (COCO class such as `person`, `car`, `dog`). |
+| `zoom` | Zoom factor around the focused area (with face/object focus). |
+| `x`, `y`, `x_center`, `y_center` | Region coordinates for `extract` crops (top-left vs center-based). |
+| `dpr` | Device pixel ratio (number or `auto`) for high-density displays. |
+| `background` | Fill for padded areas — see Background modes. |
 
-### AI Transforms (`ai_transform`)
+### Background modes (`background`)
 
-| IK Parameter | What It Does |
+| Value | Meaning |
 |---|---|
-| `ai_remove_background_external` | Removes image background using external AI provider (remove.bg), producing transparent background. |
-| `ai_remove_background` | Removes image background using ImageKit native AI, producing transparent background. |
-| `ai_drop_shadow` | Adds AI-generated drop shadow around main subject. Controls: light direction, elevation, shadow intensity. Works on transparent images only. |
-| `ai_changebg` | Changes image background using a text prompt while preserving the foreground subject. Supports plain text and base64-encoded prompts. |
-| `ai_edit` | Edits/modifies image content using a descriptive text prompt with AI-driven visual changes. |
-| `ai_bg_genfill` | Extends image beyond original boundaries by generating new background content using AI (generative fill / outpainting). |
-| `ai_gen_image` | Generates a new image from a text prompt using AI and stores it at a specified file path. |
-| `ai_genvar` | Generates AI-based visual variations of an existing image while preserving overall structure and composition. |
-| `ai_retouch` | Improves visual quality using AI — enhances details and corrects imperfections. No additional parameters. |
-| `ai_upscale` | Increases image resolution using AI super-resolution upscaling. No additional parameters. |
+| a color | Hex (`FFFFFF`) or CSS name (`white`, `red`, …). |
+| `blurred` | Blurred version of the image (optionally `blurred_<intensity>_<brightness>`). |
+| `dominant` | The image's dominant color. |
+| `genfill` | AI generative fill of the padded area (outpainting). No prompt. |
+| `gradient` | Gradient from dominant colors (`gradient_dominant`, optional palette size 2 or 4). |
 
-### Image Overlay (`image_overlay`)
+### AI transforms
 
-| IK Parameter | What It Does |
+| Parameter | What it does |
 |---|---|
-| `image_path` | Path of the overlay image from ImageKit media library. Can also specify a solid color for color block overlays. |
-| `encoded` | Whether to base64-encode the image path. |
-| `layer_x` | Horizontal position of the overlay relative to the base image. Supports arithmetic expressions and negative offsets. |
-| `layer_y` | Vertical position of the overlay relative to the base image. Supports arithmetic expressions and negative offsets. |
-| `height` | Height of the overlay image. |
-| `width` | Width of the overlay image. |
-| `crop_mode` | Controls padding vs extraction behavior for the overlay. |
-| `background` | Background color for padded areas of the overlay. |
-| `layer_focus` | Positions the overlay relative to its parent container (e.g. center, top_left, bottom_right). |
-| `layer_mode` | Blending mode: `multiply` (darken blend), `cutout` (cut transparent regions), `cutter` (mask base using overlay shape). |
-| `effects.grayscale` | Converts overlay to grayscale. |
-| `effects.border` | Adds border around the overlay. |
-| `effects.trim` | Auto-trims transparent edges of overlay. |
-| `effects.zoom` | Zooms into cropped region of overlay. |
-| `x`, `y`, `xc`, `yc` | Defines exact crop region using absolute or center-based coordinates. |
+| `ai_remove_background` | ImageKit-native background removal → transparent. |
+| `ai_remove_background_external` | Background removal via external provider (remove.bg). |
+| `ai_edit` | Prompt-based AI edit of image content. |
+| `ai_change_background` | Prompt-based replacement of the background scene (subject preserved). |
+| `ai_drop_shadow` | AI drop shadow (transparent images only). Optional `azimuth` (0–360), `elevation` (0–90), `strength` (0–100). |
+| `ai_upscale` | AI super-resolution upscaling. No params. |
+| `ai_retouch` | AI quality enhancement / blemish removal. No params. |
+| `ai_variation` | Generate a structural variation of the image. No params. |
 
-### Text Overlay (`text_overlay`)
+### Effects & enhancement
 
-| IK Parameter | What It Does |
+| Parameter | What it does |
 |---|---|
-| `text` | The text string to overlay on the image. |
-| `layer_x`, `layer_y` | Horizontal and vertical position of the text layer relative to the base image. |
-| `width` | Maximum width of the text box. Text wraps automatically when exceeded. |
-| `font_size` | Font size of the overlaid text. Supports numbers and arithmetic expressions. |
-| `color` | Text color. Supports named colors, RGB hex, and RGBA hex with opacity. |
-| `inner_alignment` | Horizontal alignment of text within the text box. |
-| `padding` | Space around the text inside its background box. |
-| `alpha` | Transparency of the entire text layer. |
-| `typography` | Typographic styling: bold, italic, strikethrough, or combinations. |
-| `font_family` | Font used to render the text. |
-| `line_height` | Spacing between lines when text wraps across multiple lines. |
-| `flip` | Flips or mirrors the text layer horizontally/vertically. |
-| `layer_mode` | Blending mode for text: `multiply`, `cutout`, or `cutter`. |
+| `blur` | Gaussian blur, 0–100. |
+| `sharpen` | Sharpen, 0–100. |
+| `unsharp_mask` | Advanced sharpening (`radius`, `sigma`, `amount`, `threshold`). |
+| `grayscale` | Convert to grayscale. |
+| `contrast_stretch` | Auto-enhance contrast. |
+| `shadow` | Drop shadow under non-transparent pixels (needs transparency). Optional `blur`, `saturation`, `x_offset`, `y_offset`. |
+| `gradient` | Linear gradient overlay (`linear_direction`, `from_color`, `to_color`, `stop_point`). |
+| `color_replace` | Replace a color and similar shades: `to_color`, `tolerance` (0–100), optional `from_color`. |
+| `colorize` | Tint the image: `color`, `intensity` (0–100). |
+| `border` | Border of `border_width` and `color`. |
+| `trim` | Trim solid edges around the subject. |
+| `rotation` | Rotate by degrees (or `auto` from EXIF). Negative = counter-clockwise. |
+| `flip` | `h`, `v`, `h_v`, or `v_h`. |
+| `radius` | Round corners (integer, `max` for a circle, or per-corner `20_40_80_160`). |
+| `opacity` | Layer opacity, 0–100. |
+| `distort` | Perspective warp (4 coordinate pairs) or arc distortion (degrees). |
 
-### Effects & Enhancement (`effects_and_enhancement`)
+### Overlays (`overlay`)
 
-| IK Parameter | What It Does |
+One `overlay` concept with a typed shape. Each overlay supports `position` (`x`, `y`, `x_center`, `y_center`, `focus`, `anchor_point`), `timing` for video (`start`, `end`, `duration`), `layer_mode` (`multiply`, `cutter`, `cutout`, `displace`), and a nested `transformation` list.
+
+| Overlay type | Key fields |
 |---|---|
-| `contrast` | Auto-enhances contrast by stretching pixel intensity to full range. |
-| `sharpen` | Basic sharpening. Excessive values may cause artifacts. |
-| `unsharp_mask` | Advanced sharpening via Unsharp Masking (USM) with better perceptual quality. |
-| `shadow` | Adds drop shadow beneath non-transparent pixels (requires transparent background). |
-| `gradient` | Applies linear gradient overlay/background with configurable colors, direction, and stop point. |
-| `grayscale` | Converts image to grayscale. |
-| `perspective_distort` | Distorts image perspective using custom coordinates. |
-| `arc_distort` | Curves the image upward or downward. |
-| `trim` | Removes solid/near-solid background pixels around a central object. |
-| `blur` | Applies Gaussian blur with configurable intensity. |
-| `border` | Adds border with specified width and color around the image. |
-| `rotate` | Rotates image clockwise/counter-clockwise or auto-rotates using EXIF data. |
-| `flip` | Mirrors image horizontally, vertically, or both. |
-| `radius` | Rounds image corners; max value produces a fully circular image. |
-| `color_replace` | Replaces a source color and similar shades with a target color, preserving luminosity. |
+| Text | `text`, plus styling: `font_size`, `font_family`, `font_color`, `inner_alignment`, `padding`, `alpha` (1–9), `typography`, `line_height`, `radius`, `rotation`, `flip`, `background`. |
+| Image | `input` (media-library path of the overlay image); nested transformations allowed. |
+| Video | `input` (video path); nested transformations + timing. |
+| Subtitle | `input` (subtitle file); styling: `font_size`, `font_family`, `color`, `typography`, `font_outline`, `font_shadow`, `background`. |
+| Solid color | `color`, plus `width`, `height`, `radius`, `alpha`, `background`, `gradient`. |
 
-### Video Transforms (`video_transforms`)
+### Video transforms
 
-| IK Parameter | What It Does |
+| Parameter | What it does |
 |---|---|
-| `radius` | Rounds video corners. Use max for circular/oval clipping. |
-| `rotate` | Rotates video clockwise by a fixed degree. |
-| `mute_audio` | Mutes the video audio track. |
-| `extract_audio` | Extracts audio track and outputs as audio-only file. |
-| `border` | Adds border around the video frame with configurable width and color. |
-| `trim_video` | Trims video using `start_time`, `end_time`, and `duration` parameters. Supports arithmetic expressions. |
+| `start_offset`, `end_offset`, `duration` | Trim the clip (seconds or arithmetic expressions). |
+| `audio_codec` | `aac`, `opus`, or `none` (to mute/strip). |
+| `video_codec` | `h264`, `vp9`, `av1`, or `none`. |
+| `streaming_resolutions` | Adaptive-bitrate ladder, e.g. `[360, 720, 1080]`. |
+| `rotation`, `radius`, `border`, `flip` | Same as image effects, applied to the video frame. |
 
-### Video Overlay (`video_overlay`)
+### Output & delivery
 
-| IK Parameter | What It Does |
+| Parameter | What it does |
 |---|---|
-| `image_path` | Path of image to overlay on video. Supports base64-encoded paths via `encoded`. |
-| `text` | Text string to overlay on video. |
-| `video_path` | Path of video to overlay on base video. |
-| `background` | Solid color for color block overlays on video. Supports named colors, RGB hex, RGBA hex. |
-| `subtitle_path` | Path to subtitle file for subtitle overlays. |
-| `layer_x`, `layer_y` | Position of any overlay (image/text/video/solid) relative to the base video. |
-| `layer_focus` | Aligns overlay relative to base video frame (e.g. center, top_left). |
-| `start`, `end`, `duration` | Controls overlay timing — when it appears, disappears, and how long it stays visible. |
-| `color` | Text color for text overlays. Supports named colors, RGB hex, RGBA hex. |
-| `font_size` | Font size for text overlays. Supports numbers and arithmetic expressions. |
-| `typography` | Typography style for text overlays. |
+| `format` | `auto`, `webp`, `avif`, `jpg`, `png`, `gif`, `mp4`, `webm`, `orig`, … |
+| `quality` | 0–100. |
+| `progressive` | Progressive JPEG. |
+| `lossless` | Lossless WebP/PNG. |
+| `named` | Apply a saved named transformation. |
+| `default_image` | Fallback image if the source is missing. |
+
+### Conditionals
+
+Transformations can be conditional on image properties (e.g. width/height/aspect ratio) — describe the condition in plain language ("if width > 1000, then …") and the tool builds the `if`/`if-else`/`if-end` chain.

@@ -1,7 +1,6 @@
 ---
 name: ai-tasks
 description: Apply AI-powered analysis to images for business-specific tagging, metadata extraction, and quality checks using controlled vocabularies. Use when user wants to analyze images and apply structured metadata in ImageKit.
-
 ---
 
 # AI Tasks Skill
@@ -71,3 +70,7 @@ Binary quality check with conditional actions.
 - **Via Saved Extensions**: Create and apply via dashboard/API
 - **Via API at Upload**: Include in `extensions` array
 - **Via Path Policies**: Auto-apply to files in specific folders
+
+## Full examples
+
+For complete, copy-ready `ai-tasks` configurations organized by industry (fashion e-commerce, travel, automotive) and detailed per-task-type parameter references, read [resources/EXAMPLES.md](resources/EXAMPLES.md).

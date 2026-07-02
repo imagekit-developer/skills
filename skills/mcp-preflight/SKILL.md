@@ -1,6 +1,6 @@
 ---
 name: mcp-preflight
-description: "MANDATORY PRE-STEP: You MUST read this skill BEFORE calling ANY ImageKit MCP tool (mcp_imagekit_api_* or mcp_imagekit_devtools_*). This skill tells you which MCP server owns which capability, how to route requests, and critical rules like never uploading files via mcp_imagekit_api_execute. Covers: file management, folder ops, cache purge, metadata, search_docs, transformation_builder, upload routing."
+description: "Routing guide for ImageKit's two MCP servers (imagekit_api and imagekit_devtools) — maps each capability to the correct server and tool, and covers the routing rules (e.g. never upload local files via execute). Use before calling any ImageKit MCP tool. Covers file management, folder ops, cache purge, metadata, docs search, transformation building, and upload routing."
 ---
 
 # MCP Preflight
@@ -56,7 +56,7 @@ Two tools only — no auth required:
 | Cache purge | `mcp_imagekit_api_execute` (write TS code) |
 | URL endpoints, origins | `mcp_imagekit_api_execute` (write TS code) |
 | Find SDK method signatures/types | `mcp_imagekit_api_search_doc` |
-| **Upload files** | **DO NOT use `mcp_imagekit_api_execute`** for local files — use `skills/upload-files/resources/upload.py`. URL-based uploads are OK via `mcp_imagekit_api_execute`. |
+| **Upload files** | Use `mcp_imagekit_api_execute` with `client.files.upload()` — **only URL-based uploads work; local files cannot be passed**. Read the `upload-files` skill first. |
 | How to do something in ImageKit | `mcp_imagekit_devtools_search_docs` |
 | Build a transformation URL | `mcp_imagekit_devtools_transformation_builder` |
 | Find SDK usage or API parameters | `mcp_imagekit_devtools_search_docs` |
@@ -66,12 +66,7 @@ Two tools only — no auth required:
 
 ## Searching / Filtering Assets
 
-When listing assets with `client.assets.list`, **filter on the server** instead of fetching everything and filtering in code — that's what saves tokens and API calls. Pick the mechanism based on the need:
-
-- **Simple list / browse** (by folder `path`, `type`, `tags`, `fileType`, plus `limit`/`skip`): pass those as top-level params and **omit `searchQuery`**. Without a `searchQuery` the call returns a typed `File[]` / `Folder[]`, so no narrowing is needed.
-- **Richer filters** (date or size ranges, full-text, custom metadata, AND/OR conditions): use a `searchQuery`. When `searchQuery` is present the top-level `type`/`tags`/`name` params are ignored, so move those conditions into the query string, and the result becomes `(File | Folder)[]` (narrow per item with `if (item.type === 'file')`).
-
-Either way, don't fetch-everything-then-filter-in-code. **Read the `search-assets` skill** before constructing any `searchQuery` — it is the cheatsheet for the Lucene-like filter syntax, operators, and field reference.
+When listing assets with `client.assets.list`, **filter on the server** instead of fetching everything and filtering in code. **Read the `search-assets` skill first** — it is the canonical reference for the Lucene-like `searchQuery` syntax, when to use top-level params vs a `searchQuery`, and how to narrow the returned `File`/`Folder` results.
 
 ## Integration Use Cases
 
@@ -83,8 +78,8 @@ When the task is to integrate ImageKit into a specific technology (front-end, ba
 
 ## Critical Rules
 
-1. **NEVER upload local files via `mcp_imagekit_api_execute`** — it cannot handle file bytes, streams, or Buffers. Use the upload CLI script for local files. URL-based uploads via execute are fine.
+1. **Uploads are URL-only** — `client.files.upload()` via `mcp_imagekit_api_execute` only accepts a public URL string. **Local files cannot be uploaded** (no file bytes, streams, or Buffers). Read the `upload-files` skill first.
 2. **ALWAYS call `search_docs` before writing any ImageKit SDK code** — do not rely on training data for method signatures or parameters.
 3. **Do NOT read library source code to figure out usage** — `search_docs` returns official docs and working examples. Only read source code as a last resort when docs fail.
 4. **Use `transformation_builder` instead of hand-crafting transformation URLs** — it knows correct parameter syntax and ordering.
-5. **Filter `client.assets.list` server-side, not in code** — use top-level params (`path`, `type`, `tags`, `fileType`, `limit`, `skip`) for simple list/browse (omit `searchQuery` to get a typed `File[]`/`Folder[]`), and a `searchQuery` only for richer conditions (ranges, full-text, custom metadata, AND/OR). Read the `search-assets` skill first.
+5. **Filter `client.assets.list` server-side, not in code** — read the `search-assets` skill for how to choose between top-level params and a `searchQuery`.

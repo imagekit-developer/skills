@@ -1,6 +1,6 @@
 ---
 name: imagekit-sdk-reference
-description: "MANDATORY: Read this before writing any ImageKit SDK code or calling mcp_imagekit_api_* tools. Provides complete TypeScript method signatures, parameters, return types, error handling, and examples for the @imagekit/nodejs SDK."
+description: "TypeScript SDK reference for @imagekit/nodejs — method signatures, parameter and return types (File, Folder, CustomMetadataField), error handling, and examples. Use when writing ImageKit SDK code or calling the imagekit_api execute tool."
 ---
 
 # ImageKit TypeScript SDK Reference
@@ -9,70 +9,25 @@ Read this skill before calling any `mcp_imagekit_api_*` tool or writing TypeScri
 
 **Rules:**
 1. Use exact parameter names — the SDK is strict about camelCase
-2. `assets.list()` returns `(File | Folder)[]`. **Without** a `searchQuery`, pass `{ type: 'file' }` (or `'folder'`) to get a typed `File[]` (or `Folder[]`) directly — no narrowing needed. **With** a `searchQuery`, the API ignores the `type` param so the result stays a union: filter with `type = "file"` inside the query string and narrow with `for...of` + `if (item.type === 'file')`. Do NOT use `.filter((i): i is File => ...)` — the predicate collides with Deno's global `File` (see Gotchas).
+2. `assets.list()` returns `(File | Folder)[]`. Narrow with `for...of` + `if (item.type === 'file')`, never `.filter((i): i is File => ...)`. See the `search-assets` skill for the full rules on `searchQuery` vs a typed `File[]` and why the predicate fails.
 3. In `execute`/MCP code, do NOT try/catch single API calls — the tool reports errors for you. Only catch when you branch on a specific failure, and **duck-type** the error (`'status' in err`) rather than `instanceof ImageKit.APIError`, since a value import of the SDK is not available in the sandbox.
 4. Use `skip`/`limit` for pagination (max 1000 per request)
-5. **Never upload files via `mcp_imagekit_api_execute`** — use the `upload-files` skill instead
-6. Upload in SDK code is only valid when the `file` param is a **URL string** — never pass local file paths, Buffers, or streams through MCP
-7. Nullable properties (`tags`, `AITags`, `customCoordinates`) require optional chaining (`?.`) or null checks
-8. `.find()` returns `T | undefined` — always check for `undefined` before accessing properties
+5. **Uploads are URL-only** — the `file` param must be a **URL string**; local file paths, Buffers, and streams cannot be passed. Read the `upload-files` skill first.
+6. Nullable properties (`tags`, `AITags`, `customCoordinates`) require optional chaining (`?.`) or null checks
+7. `.find()` returns `T | undefined` — always check for `undefined` before accessing properties
 
 ---
 
 ## TypeScript Gotchas
 
-> **Key insight:** In the MCP execution context (Deno runtime), **always use `for...of` + `if` blocks** for type narrowing. The type predicate approach (`item is File`) fails because Deno's global `File` (the Blob-based Web API) shadows the ImageKit SDK's `File` type.
+Union narrowing for `assets.list()` results — `for...of` + `if`, why the `.filter((i): i is File => ...)` predicate collides with Deno's global `File`, and `searchQuery` vs a typed `File[]` — is covered in full by the **`search-assets` skill**; follow it when handling list results. The gotchas below are the SDK-specific ones not covered there.
 
 | Pattern | Problem | Fix |
 |---------|---------|-----|
-| `.filter(i => i.type === 'file')` | Does NOT narrow the union type | Use `for...of` + `if` |
-| `.filter((i): i is File => ...)` | Global `File` shadows SDK `File` in Deno | Use `for...of` + `if` |
 | `.find(i => ...)` | Returns `T \| undefined` | Check for `undefined` + narrow type |
-| `.filter().map()` | `.map()` inherits un-narrowed type | Use `for...of` + `if` + push |
 | `file.tags` | `string[] \| null` | Use `?.` or null check |
 | `file.AITags` | `Array \| null` | Use `?.` or null check |
-| `for...of` + `if` block | — | **Always works — use this** |
-
-### Why `.filter()` fails in MCP context (two separate issues)
-
-**Issue 1: `.filter()` without a type predicate does not narrow.**
-TypeScript's `.filter()` returns the same array type unless the callback has a type predicate. A boolean callback does NOT narrow the output type.
-
-```typescript
-// ❌ DOES NOT COMPILE — no narrowing:
-const files = result.filter((item) => item.type === 'file');
-files[0].fileId; // TS ERROR: 'fileId' does not exist on type 'File | Folder'
-```
-
-**Issue 2: Type predicate `item is File` collides with global `File` in Deno.**
-In the MCP execution environment (Deno), the global `File` type (Web API Blob-based) shadows the SDK's `File` type. TypeScript resolves `File` in the predicate to the global, causing:
-
-```typescript
-// ❌ DOES NOT COMPILE in Deno/MCP — global File ≠ SDK File:
-const files = result.filter((item): item is File => item.type === 'file');
-// Error: Type 'File' is not assignable to type 'import("@imagekit/nodejs/...").File'
-//   Types of property 'type' are incompatible.
-//   Type 'string' is not assignable to type '"file" | "file-version"'
-```
-
-**✅ RECOMMENDED: use `for...of` + `if` whenever the result is a union** (i.e. when you used a `searchQuery`, `type: 'all'`, or no `type`):
-```typescript
-// ✅ ALWAYS WORKS — control flow narrowing, no type name needed:
-const result = await client.assets.list({ searchQuery: 'type = "file"', limit: 10 });
-const files = [];
-for (const item of result) {
-  if (item.type === 'file') {
-    files.push({
-      name: item.name,
-      fileId: item.fileId,
-      filePath: item.filePath,
-      size: item.size,
-      url: item.url
-    });
-  }
-}
-return files;
-```
+| Any member-specific prop on a `File \| Folder` from `assets.list()` | Only shared fields (`name`, `type`, `createdAt`, `updatedAt`, `customMetadata`) exist on the union; the rest need narrowing | Narrow once with `if`, then access freely. Branch on `type === 'folder'` (→ `Folder`; else → `File`, since `File.type` is `'file' \| 'file-version'`) |
 
 ### `.find()` returns `T | undefined`
 
@@ -147,10 +102,9 @@ file.AITags?.map(...); // ✅
 
 ## File Operations
 
-### Upload a file (URL only via MCP)
+### Upload a file (URL only)
 ```typescript
-// ⚠️ Via mcp_imagekit_api_execute, ONLY URL-based uploads work.
-// For local files, use the upload-files skill (CLI script) instead.
+// ⚠️ ONLY URL-based uploads work. Local files cannot be uploaded.
 const file = await client.files.upload({
   file: 'https://example.com/img.jpg', // URL string ONLY in MCP context
   fileName: 'img.jpg',
@@ -189,26 +143,7 @@ const result = await client.assets.list({
 // Returns: (File | Folder)[] — a flat array, NOT { files, folders }
 ```
 
-**Type narrowing depends on whether you use `searchQuery`:**
-
-- **Without `searchQuery`** — pass `{ type: 'file' }` (or `'folder'`); the return type is `File[]` (or `Folder[]`), no narrowing needed:
-  ```typescript
-  const files = await client.assets.list({ type: 'file', path: '/uploads', limit: 100 }); // File[]
-  files[0].fileId; // ✅ no narrowing required
-  ```
-- **With `searchQuery`** — the API ignores the `type` param, so the result is `(File | Folder)[]`. Filter with `type = "file"` inside the query and narrow with `for...of` + `if`:
-  ```typescript
-  const result = await client.assets.list({ searchQuery: 'type = "file" AND size > "2mb"', limit: 100 });
-  const files = [];
-  for (const item of result) {
-    if (item.type === 'file') {
-      files.push({ name: item.name, fileId: item.fileId, filePath: item.filePath, size: item.size, url: item.url });
-    }
-  }
-  return files;
-  ```
-
-Do NOT narrow a union with `.filter((item): item is File => ...)` — in Deno the global `File` shadows the SDK's `File` and the predicate fails to compile. Use `for...of` + `if`.
+**Type narrowing depends on whether you use `searchQuery`** — see the `search-assets` skill for the full rules (a top-level `type` gives a typed `File[]`; a `searchQuery` returns the `(File | Folder)[]` union, which you narrow with `for...of` + `if`).
 
 **Shared properties** (safe on both File and Folder): `name`, `type`, `customMetadata`, `createdAt`, `updatedAt`
 

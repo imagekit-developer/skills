@@ -6,9 +6,9 @@ AI tasks support three task types, each designed for different metadata manageme
 |-----------|--------------|-------------|
 | [select_tags](#select-tags) | Selects and applies tags from your vocabulary | Categorization, product attributes, building searchable taxonomies, or applying multiple labels |
 | [select_metadata](#select-metadata) | Sets custom metadata field values from your vocabulary | Structured data like color, season, type, status, or single/multi-select dropdown fields |
-| [yes_no](#yes/no) | Asks yes/no questions and executes conditional actions | Quality checks, compliance verification, binary classifications, or conditional workflows |
+| [yes_no](#yesno) | Asks yes/no questions and executes conditional actions | Quality checks, compliance verification, binary classifications, or conditional workflows |
 
-### Select tags
+## Select tags
 
 Analyzes the image and adds relevant tags from your controlled vocabulary. The AI compares what it sees in the image against your instruction, selects matching tags from your vocabulary while respecting min/max selection constraints, and adds the selected tags to the file. For example, an image of a living room might receive tags: `["sofa", "chair", "table", "lamp"]`.
 
@@ -34,7 +34,7 @@ Analyzes the image and adds relevant tags from your controlled vocabulary. The A
 | `max_selections` | number | No       | Maximum tags to select (≥ 1). Default: no maximum                              |
 
 
-# Select metadata
+## Select metadata
 
 Analyzes the image and sets a custom metadata field value from your vocabulary. The AI evaluates the image against your instruction, selects the best matching value(s) from vocabulary, validates against field type constraints, and sets the custom metadata field. For example, a metadata field `lighting` might be set to `"golden-hour"`.
 
@@ -61,14 +61,12 @@ Analyzes the image and sets a custom metadata field value from your vocabulary. 
 | `min_selections` | number | No       | Minimum values to select (≥ 0). Default: no minimum                            |
 | `max_selections` | number | No       | Maximum values to select (≥ 1). Default: no maximum                            |
 
-{% callout style="warning" %}
-**Important:**  
-1. The custom metadata field must exist before using it in AI tasks. Create fields using the [Custom Metadata Fields API](/api-reference#create-custom-metadata-field) or in your dashboard under Settings → Media Library → Custom Metadata Fields.
-2. Your vocabulary must match the field's schema definition. If you later change the field schema, AI tasks may fail to set values. Check the asset history to see why values were or weren't set.
-{% /callout %}
+> **Important:**
+> 1. The custom metadata field must exist before using it in AI tasks. Create fields using the Custom Metadata Fields API or in your dashboard under Settings → Media Library → Custom Metadata Fields.
+> 2. Your vocabulary must match the field's schema definition. If you later change the field schema, AI tasks may fail to set values. Check the asset history to see why values were or weren't set.
 
 
-### Yes/No
+## Yes/No
 
 Asks a yes/no question about the image and executes different actions based on the answer. The AI evaluates the image and returns one of three responses: **Yes**, **No**, or **Unknown** (when the AI cannot confidently determine the answer). Each response can trigger different actions—tags added/removed and metadata set/unset.
 
@@ -113,12 +111,10 @@ For example, a high-quality image might receive tags `["print-ready", "high-qual
 | `on_no`       | object | No*      | Actions to execute if AI determines answer is "no"                       |
 | `on_unknown`  | object | No       | Actions to execute if AI cannot confidently determine yes or no          |
 
-{% callout style="info" %} 
-At least one of `on_yes` or `on_no` is required.
-{% /callout %}
+> **Note:** At least one of `on_yes` or `on_no` is required.
 
 
-# Example: Fashion e-commerce
+## Example: Fashion e-commerce
 
 This comprehensive example combines all three task types for a fashion retailer:
 
