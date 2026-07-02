@@ -30,17 +30,18 @@ Pick one of the two methods below. Restart your editor after installing so the M
 
 ### Plugin method (recommended)
 
-On **Claude Desktop** and **VS Code**, the ImageKit plugin installs the skills **and** both MCP servers in a single step.
+On Claude Desktop, Claude.ai (web), and VS Code, the ImageKit plugin installs the skills and both MCP servers in a single step.
 
-**Claude Desktop**
+**Claude Desktop & Claude.ai (web)**
 
-1. Open **Customize** in the left sidebar, then click **+** → **Create Plugin** → **Add Marketplace**.
-2. Enter `imagekit-developer/skills` as the marketplace, then find and install the **ImageKit Skills** plugin.
-3. Open **Connectors** in the installed plugin, enable `imagekit_devtools` and `imagekit_api`, and complete authentication for `imagekit_api` when prompted.
+1. Open Customize in the left sidebar and go to the Plugins tab.
+2. Under Personal plugins, click **+** → Add marketplace → Add from a repository, and enter `imagekit-developer/skills`.
+3. Install the ImageKit plugin from that marketplace.
+4. Enable the bundled `imagekit_devtools` and `imagekit_api` connectors, and authenticate `imagekit_api` when prompted.
 
 **VS Code**
 
-1. Open the Command Palette (`⇧⌘P`) and run **Install Plugin from Source**.
+1. Open the Command Palette (`⇧⌘P`) and run Install Plugin from Source.
 2. Enter `imagekit-developer/skills` as the plugin source.
 3. Restart VS Code.
 
