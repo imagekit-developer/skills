@@ -14,7 +14,7 @@ Reusable AI agent skills for [ImageKit.io](https://imagekit.io) — install them
 | **search-assets** | Filter and search ImageKit files and folders using the Lucene-like `searchQuery` syntax, operators, and field reference |
 | **search-docs** | Search ImageKit documentation with optimized queries and source selection |
 | **transformation-builder** | Build ImageKit image/video transformations — AI editing, background removal, resize, crop, overlays, and more |
-| **upload-files** | Upload files to ImageKit media library with folder paths, tags, and metadata |
+| **upload-files** | Upload files to the ImageKit media library from a public URL (local files not supported) with folder paths, tags, and metadata |
 | **ai-tasks** | Apply AI-powered analysis to images for business-specific tagging, metadata extraction, and quality checks using controlled vocabularies |
 
 ## Installation

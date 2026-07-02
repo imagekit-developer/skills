@@ -1,19 +1,11 @@
 ---
 name: search-docs
-description: "MANDATORY PRE-STEP: You MUST read and follow this skill BEFORE calling the `search_docs` tool. This skill teaches you how to craft effective queries, select the right sources, and handle results when searching ImageKit documentation. Never call the search_docs MCP tool without first consulting this skill."
+description: "Guidance for searching ImageKit documentation with the search_docs tool — how to craft effective queries, select the right sources, and handle results. Use before calling search_docs to look up ImageKit features, APIs, configuration, pricing, or SDK examples."
 ---
 
 # Documentation Search Skill
 
-## IMPORTANT: Read This BEFORE Calling the Tool
-
-This skill MUST be invoked and read before you call `search_docs`. It contains critical instructions for crafting queries and selecting sources that determine whether the tool returns useful results.
-
-**Workflow:**
-1. Agent reads this skill (you are here)
-2. Agent crafts query and selects sources using the guidelines below
-3. Agent calls `search_docs` with the prepared parameters
-4. Agent interprets and presents results following the rules below
+Prepare your query and source selection using the guidelines below, then call `search_docs` and present the results following the rules here.
 
 ## When to use
 - User asks about ImageKit features, capabilities, or services
