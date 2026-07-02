@@ -1,6 +1,6 @@
 ---
 name: search-assets
-description: "Manu Reference for ImageKit's Lucene-like searchQuery syntax — operators, field reference, and examples for filtering files and folders by name, tags, date, size, format, path, or custom/embedded metadata, plus how to narrow the returned results. Use when calling client.assets.list() with a searchQuery or when searching, filtering, or listing assets."
+description: "Reference for ImageKit's Lucene-like searchQuery syntax — operators, field reference, and examples for filtering files and folders by name, tags, date, size, format, path, or custom/embedded metadata, plus how to narrow the returned results. Use when calling client.assets.list() with a searchQuery or when searching, filtering, or listing assets."
 ---
 
 # ImageKit Search Queries (`searchQuery`)

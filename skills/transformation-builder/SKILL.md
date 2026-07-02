@@ -46,7 +46,7 @@ So your job is: translate the user's vague request into a precise query that ref
 | User says | Weak query | Good query |
 |---|---|---|
 | "Make the red balls green" | "make red balls green" | "Apply an AI edit (`ai_edit`) with prompt: change the red balls to green" |
-| "Clean it up and put it on white" | "clean up, white background" | "Apply `ai_retouch`, then `ai_remove_background`, then `ai_change_background` with prompt: solid white background" |
+| "Clean it up and put it on white" | "clean up, white background" | "Apply `ai_retouch`, then `ai_remove_background` with white background color" |
 | "Make it look like a painting" | "painting style" | "Apply `ai_edit` with prompt: oil-painting style with visible brush strokes" |
 | "Crop around the face" | "crop face" | "Resize with `focus`=`face` to crop around the detected face" |
 | "Text 'Hello' at the bottom" | "add hello text" | "Add a text overlay with text 'Hello', positioned at the bottom (`focus`=`bottom`)" |
@@ -77,7 +77,7 @@ Use this to translate intent into the correct terms to put in the query. These a
 | Overlay a logo/watermark image | text/image **overlay** | Single `overlay` concept, typed (see Overlays) |
 | Write text on the image | text **overlay** with `text` | See Overlays |
 
-> There is **no** "generate an image from scratch" step in this tool — it always transforms an existing `src`. Text-to-image (`ik-genimg`) is a separate feature, not part of `transformation_builder`.
+> There is **no** "generate an image from scratch" step in this tool — it always transforms an existing `src`. To generate images from scratch, use text-to-image generation in the ImageKit DAM (Digital Asset Manager), which is a separate feature from `transformation_builder`.
 
 ### Key distinction: `ai_edit` vs `color_replace` vs `ai_change_background`
 
