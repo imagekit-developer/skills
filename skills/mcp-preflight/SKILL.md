@@ -10,9 +10,9 @@ ImageKit has three hosted MCP servers. Call the one that matches the job.
 | Job | Server | Then |
 |-----|--------|------|
 | Search, upload, organize, tag, share, metadata, collections, path policies, public links, cache purge | DAM (`https://imagekit.io/mcp/dam`) | See skills below when the task is search, upload, sharing, or AI tasks |
-| Origins / external storage (S3, GCS, Azure, web server, …) | Admin (`https://imagekit.io/mcp/admin`) | `list_origins`, `create_origin`, `get_origin`, `update_origin`, `delete_origin` |
-| URL endpoints | Admin | `list_url_endpoints`, `create_url_endpoint`, `get_url_endpoint`, `update_url_endpoint`, `delete_url_endpoint` |
-| Account usage totals or usage analytics | Admin | `get_account_usage`, `get_account_usage_analytics` |
+| Origins / external storage (S3, GCS, Azure, web server, …) | Admin (`https://imagekit.io/mcp/admin`) | Read the `admin` skill |
+| URL endpoints | Admin | Read the `admin` skill |
+| Account usage totals or usage analytics | Admin | Read the `admin` skill |
 | "How do I…", API/SDK details, whether a feature exists | DevTools `search_docs` | Read the `search-docs` skill first |
 | Build a transformation URL | DevTools `transformation_builder` | Read the `transformation-builder` skill first |
 | Integrate ImageKit into an app, CMS, or framework | — | Read `imagekit-integrations` to pick the SDK/plugin, then `search_docs` for details |
@@ -21,7 +21,7 @@ DAM and Admin each need a separate connection and ImageKit sign-in. DevTools doe
 
 ## When a skill actually helps
 
-Most DAM and Admin tools are self-explanatory. Read a companion skill only for the cases below — they have calling conventions that the tool schema does not make obvious.
+Most DAM tools are self-explanatory. Read a companion skill only for the cases below — they have calling conventions that the tool schema does not make obvious.
 
 | Task | Skill |
 |------|--------|
@@ -29,6 +29,7 @@ Most DAM and Admin tools are self-explanatory. Read a companion skill only for t
 | Upload a file | `upload-files` — picker vs signed upload; never put file bytes in chat |
 | Who can access a file, folder, or collection; grant or revoke access | `asset-access-control` — file/folder ACL tools are not the same as collection ACL tools |
 | Create or apply AI tagging / metadata / QC workflows | `ai-tasks` — payload shape, vocabularies, and how they attach to saved extensions |
+| Origins, URL endpoints, usage, or usage analytics | `admin` — Admin MCP tools; origin then URL endpoint |
 | Which SDK, plugin, or widget to use for a stack | `imagekit-integrations` — then `search_docs` for implementation details |
 
 ## Rules

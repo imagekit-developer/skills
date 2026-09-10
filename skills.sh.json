@@ -20,6 +20,13 @@
       ]
     },
     {
+      "title": "Admin",
+      "description": "Origins, URL endpoints, account usage, and usage analytics on the Admin MCP server.",
+      "skills": [
+        "admin"
+      ]
+    },
+    {
       "title": "DevTools",
       "description": "How to query the public docs-search and transformation-builder tools.",
       "skills": [
