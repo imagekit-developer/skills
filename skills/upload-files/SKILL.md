@@ -38,5 +38,4 @@ plus every `formFields` entry as returned. Do not add, remove, or re-serialize f
 ## Notes
 
 - Folder is a media-library path starting with `/`, not a local path. Nested folders are created as needed.
-- Filenames allow `a-z`, `A-Z`, `0-9`, `.`, `-`. Other characters become `_`.
 - Free plan limits: 25MB images, 100MB videos. Max 100 versions per file.
