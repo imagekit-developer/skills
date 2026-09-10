@@ -1,13 +1,19 @@
 ---
 name: search-assets
-description: "Reference for ImageKit's Lucene-like searchQuery syntax — operators, field reference, and examples for filtering files and folders by name, tags, date, size, format, path, or custom/embedded metadata, plus how to narrow the returned results. Use when calling client.assets.list() with a searchQuery or when searching, filtering, or listing assets."
+description: "Reference for ImageKit's Lucene-like searchQuery syntax — operators, field reference, and examples for filtering files and folders by name, tags, date, size, format, path, or custom/embedded metadata. Use when calling search_media_library on DAM MCP or client.assets.list() in application code."
 ---
 
 # ImageKit Search Queries (`searchQuery`)
 
-`client.assets.list({ searchQuery })` takes a Lucene-like filter string. A good query is the difference between one precise API call and paging through everything. This skill is the cheatsheet for building that string.
+To search the user's live media library, call **`search_media_library`** on the DAM MCP server with a tight `searchQuery`. Do not fetch a broad page and filter in code. This skill is the cheatsheet for building that string.
 
-When user requests "find Nike brand images", here brand could be a custom metadata field, i.e. `"customMetadata.brand"`. So it is always recommended to first list the custom metadata fields available so that correct `searchQuery` can be constructed. You can use `client.customMetadataFields.list()` to get the list of custom metadata fields and their types.
+When writing application code, the same syntax is passed to `client.assets.list({ searchQuery })`.
+
+When the user describes assets with everyday words ("Nike", "summer campaign", "approved"), that word may be a **custom metadata field**, a **tag**, or only a **filename**. Discover fields before you guess:
+
+1. Call `list_custom_metadata_fields` (DAM) or `client.customMetadataFields.list()` (SDK). Match against each field's `name`, `label`, and `schema.selectOptions`. Use the field's `name` as `"customMetadata.<name>"`.
+2. Call `list_client_tags` with that word as `label`. If tags come back, filter with `tags IN [...]`.
+3. Only if neither matches may you fall back to `name HAS "…"`.
 
 ## Syntax
 

@@ -1,8 +1,8 @@
 {
     "name": "imagekit-plugin",
     "displayName": "ImageKit Plugin",
-    "description": "Provides MCP server integrations for ImageKit public API for docs search, transformations, and resource management",
-    "version": "1.1.1",
+    "description": "Provides MCP server integrations for ImageKit DAM, Admin, and DevTools — media library management, account settings, docs search, and transformations",
+    "version": "1.2.0",
     "author": {
         "name": "ImageKit",
         "email": "developer@imagekit.io"
@@ -13,7 +13,7 @@
     "keywords": [
         "imagekit",
         "mcp",
-        "api",
+        "dam",
         "transformation",
         "media-management"
     ],

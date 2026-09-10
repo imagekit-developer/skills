@@ -1,11 +1,11 @@
 {
   "name": "imagekit-tools",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "owner": {
     "name": "ImageKit",
     "email": "developer@imagekit.io"
   },
-  "description": "ImageKit development tools marketplace with MCP server integrations, transformation builders, and document search capabilities",
+  "description": "ImageKit development tools marketplace with DAM, Admin, and DevTools MCP servers, transformation builders, and document search",
   "homepage": "https://imagekit.io",
   "repository": "https://github.com/imagekit-developer/skills",
   "plugins": [
@@ -13,8 +13,8 @@
       "name": "imagekit-plugin",
       "displayName": "ImageKit Plugin",
       "source": "./",
-      "description": "Provides MCP server integrations for ImageKit public API for docs search, transformations, SDK reference, and resource management",
-      "version": "1.1.1",
+      "description": "Provides MCP server integrations for ImageKit DAM, Admin, and DevTools — media library management, account settings, SDK reference, and resource management",
+      "version": "1.2.0",
       "author": {
         "name": "ImageKit",
         "email": "developer@imagekit.io"
@@ -24,7 +24,7 @@
       "keywords": [
         "imagekit",
         "mcp",
-        "api",
+        "dam",
         "transformation",
         "media-management"
       ]

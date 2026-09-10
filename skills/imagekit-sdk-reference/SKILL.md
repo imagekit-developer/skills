@@ -1,18 +1,18 @@
 ---
 name: imagekit-sdk-reference
-description: "TypeScript SDK reference for @imagekit/nodejs — method signatures, parameter and return types (File, Folder, CustomMetadataField), error handling, and examples. Use when writing ImageKit SDK code or calling the imagekit_api execute tool."
+description: "TypeScript SDK reference for @imagekit/nodejs — method signatures, parameter and return types (File, Folder, CustomMetadataField), error handling, and examples. Use when writing ImageKit SDK code in an application. Do not use this skill to operate a live ImageKit account over MCP — use the DAM and Admin MCP tools instead (see mcp-preflight)."
 ---
 
 # ImageKit TypeScript SDK Reference
 
-Read this skill before calling any `mcp_imagekit_api_*` tool or writing TypeScript code against the ImageKit SDK. It contains exact method signatures, parameter types, return shapes, and error handling patterns for `@imagekit/nodejs`.
+Read this skill before writing TypeScript against `@imagekit/nodejs` in an application. To search, upload, or manage the user's live media library, use the DAM MCP tools instead — see `mcp-preflight`.
 
 **Rules:**
 1. Use exact parameter names — the SDK is strict about camelCase
-2. `assets.list()` returns `(File | Folder)[]`. Narrow with `for...of` + `if (item.type === 'file')`, never `.filter((i): i is File => ...)`. See the `search-assets` skill for the full rules on `searchQuery` vs a typed `File[]` and why the predicate fails.
-3. In `execute`/MCP code, do NOT try/catch single API calls — the tool reports errors for you. Only catch when you branch on a specific failure, and **duck-type** the error (`'status' in err`) rather than `instanceof ImageKit.APIError`, since a value import of the SDK is not available in the sandbox.
+2. `assets.list()` returns `(File | Folder)[]`. Narrow with `for...of` + `if (item.type === 'file')`, never `.filter((i): i is File => ...)`. See the `search-assets` skill for the full rules on `searchQuery` vs a typed `File[]`.
+3. Catch `ImageKit.APIError` (or duck-type `{ status }`) when you need to branch on a specific failure such as 404. Re-throw anything you don't handle.
 4. Use `skip`/`limit` for pagination (max 1000 per request)
-5. **Uploads are URL-only** — the `file` param must be a **URL string**; local file paths, Buffers, and streams cannot be passed. Read the `upload-files` skill first.
+5. To upload into the user's live library via MCP, read the `upload-files` skill (`upload_file` / `create_upload_signature`). In application code, `client.files.upload()` accepts a URL, Buffer, or stream as documented by the SDK.
 6. Nullable properties (`tags`, `AITags`, `customCoordinates`) require optional chaining (`?.`) or null checks
 7. `.find()` returns `T | undefined` — always check for `undefined` before accessing properties
 
@@ -278,12 +278,8 @@ for (let skip = 0; ; skip += 100) {
   }
 }
 
-// Error handling — in execute/MCP code you normally DON'T need try/catch: let the
-// error propagate and the tool reports it for you. The ONLY reason to catch is to
-// branch on a specific failure (e.g. treat 404 as "not found") — and then you must
-// re-throw everything you don't handle. Duck-type the error: a value import of the
-// SDK (import ImageKit from '@imagekit/nodejs') is NOT available in the Deno sandbox
-// and throws at runtime, so don't rely on `instanceof ImageKit.APIError`.
+// Error handling — catch ImageKit.APIError (or duck-type `{ status }`) only when
+// you need to branch on a specific failure. Re-throw everything else.
 try {
   return await client.files.get(fileId);
 } catch (err) {
