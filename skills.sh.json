@@ -3,7 +3,7 @@
   "notGrouped": "bottom",
   "groupings": [
     {
-      "title": "Routing",
+      "title": "General",
       "description": "Which MCP server to call: DAM (media library), Admin (origins, URL endpoints, usage analytics), or DevTools.",
       "skills": [
         "mcp-preflight"
