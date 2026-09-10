@@ -8,36 +8,47 @@ Reusable AI agent skills for [ImageKit.io](https://imagekit.io) — install them
 
 | Skill | Description |
 |-------|-------------|
-| **mcp-preflight** | Mandatory routing guide — tells the agent which MCP server to call for what, before every ImageKit tool invocation |
-| **imagekit-sdk-reference** | TypeScript SDK reference — method signatures, types (File, Folder), error handling, and examples for `@imagekit/nodejs` |
-| **imagekit-integrations** | Index of ImageKit SDKs, plugins, and integrations across front-end, back-end, mobile, CMS, storage, video, upload widgets, and URL generation |
-| **search-assets** | Filter and search ImageKit files and folders using the Lucene-like `searchQuery` syntax, operators, and field reference |
-| **search-docs** | Search ImageKit documentation with optimized queries and source selection |
-| **transformation-builder** | Build ImageKit image/video transformations — AI editing, background removal, resize, crop, overlays, and more |
-| **upload-files** | Upload files to the ImageKit media library from a public URL (local files not supported) with folder paths, tags, and metadata |
-| **ai-tasks** | Apply AI-powered analysis to images for business-specific tagging, metadata extraction, and quality checks using controlled vocabularies |
+| **mcp-preflight** | Which MCP server to call: DAM (media library), Admin (origins, URL endpoints, usage analytics), or DevTools |
+| **search-assets** | Lucene `searchQuery` for DAM `search_media_library` — discover custom metadata and tags before guessing |
+| **upload-files** | DAM uploads via `upload_file` (picker) or `create_upload_signature` — never inline file bytes |
+| **asset-access-control** | File/folder vs media-collection ACL tools, and the write rules that are easy to get wrong |
+| **ai-tasks** | Payload shape for AI tagging, metadata extraction, and quality checks on DAM assets |
+| **search-docs** | How to query DevTools `search_docs` (query rewriting and source selection) |
+| **transformation-builder** | How to query DevTools `transformation_builder` for correct transformation URLs |
+| **imagekit-integrations** | Index of ImageKit SDKs, plugins, and widgets — pick the right one for a stack, then search the docs |
 
 ## Installation
 
-There are two pieces to install: the **skills** (this repo) and two **MCP servers**:
+There are two pieces to install: the **skills** (this repo) and the **MCP servers**:
 
-| MCP server | URL |
-|------------|-----|
-| `imagekit_devtools` | `https://devtools-mcp.imagekit.io/mcp` |
-| `imagekit_api` | `https://api-mcp.imagekit.io/mcp` |
+| MCP server | URL | Auth |
+|------------|-----|------|
+| `imagekit_devtools` | `https://devtools-mcp.imagekit.io/mcp` | None |
+| `imagekit_dam` | `https://imagekit.io/mcp/dam` | Sign in with your ImageKit account |
+| `imagekit_admin` | `https://imagekit.io/mcp/admin` | Sign in with your ImageKit account |
 
-Pick one of the two methods below. Restart your editor after installing so the MCP servers take effect.
+If you previously connected `https://api-mcp.imagekit.io/mcp`, remove it and add DAM and Admin instead.
+
+What each server does:
+
+| Server | Use it to |
+|--------|-----------|
+| DAM | Search, upload, organize, tag, share, and manage the media library |
+| Admin | Manage origins (external storage), URL endpoints, account usage, and usage analytics |
+| DevTools | Search the docs and build transformation URLs (no sign-in) |
+
+Pick one of the two methods below. Restart your editor after installing so the MCP servers take effect. Authenticate DAM and Admin when prompted.
 
 ### Plugin method (recommended)
 
-On Claude Desktop, Claude.ai (web), and VS Code, the ImageKit plugin installs the skills and both MCP servers in a single step.
+On Claude Desktop, Claude.ai (web), and VS Code, the ImageKit plugin installs the skills and MCP servers in a single step.
 
 **Claude Desktop & Claude.ai (web)**
 
 1. Open Customize in the left sidebar and go to the Plugins tab.
 2. Under Personal plugins, click **+** → Add marketplace → Add from a repository, and enter `imagekit-developer/skills`.
 3. Install the ImageKit plugin from that marketplace.
-4. Enable the bundled `imagekit_devtools` and `imagekit_api` connectors, and authenticate `imagekit_api` when prompted.
+4. Enable the bundled `imagekit_devtools`, `imagekit_dam`, and `imagekit_admin` connectors, and authenticate DAM and Admin when prompted.
 
 **VS Code**
 
@@ -60,7 +71,8 @@ npx skills add imagekit-developer/skills --all
 
 ```bash
 claude mcp add --transport http imagekit_devtools https://devtools-mcp.imagekit.io/mcp
-claude mcp add --transport http imagekit_api https://api-mcp.imagekit.io/mcp
+claude mcp add --transport http imagekit_dam https://imagekit.io/mcp/dam
+claude mcp add --transport http imagekit_admin https://imagekit.io/mcp/admin
 ```
 </details>
 
@@ -78,9 +90,13 @@ Edit your config file:
       "command": "npx",
       "args": ["-y", "mcp-remote@latest", "https://devtools-mcp.imagekit.io/mcp"]
     },
-    "imagekit_api": {
+    "imagekit_dam": {
       "command": "npx",
-      "args": ["-y", "mcp-remote@latest", "https://api-mcp.imagekit.io/mcp"]
+      "args": ["-y", "mcp-remote@latest", "https://imagekit.io/mcp/dam"]
+    },
+    "imagekit_admin": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@latest", "https://imagekit.io/mcp/admin"]
     }
   }
 }
@@ -94,7 +110,8 @@ Via CLI:
 
 ```bash
 codex mcp add imagekit_devtools --url https://devtools-mcp.imagekit.io/mcp
-codex mcp add imagekit_api --url https://api-mcp.imagekit.io/mcp
+codex mcp add imagekit_dam --url https://imagekit.io/mcp/dam
+codex mcp add imagekit_admin --url https://imagekit.io/mcp/admin
 ```
 
 Or edit `~/.codex/config.toml`:
@@ -103,8 +120,11 @@ Or edit `~/.codex/config.toml`:
 [mcp_servers.imagekit_devtools]
 url = "https://devtools-mcp.imagekit.io/mcp"
 
-[mcp_servers.imagekit_api]
-url = "https://api-mcp.imagekit.io/mcp"
+[mcp_servers.imagekit_dam]
+url = "https://imagekit.io/mcp/dam"
+
+[mcp_servers.imagekit_admin]
+url = "https://imagekit.io/mcp/admin"
 ```
 </details>
 
@@ -113,7 +133,8 @@ url = "https://api-mcp.imagekit.io/mcp"
 
 ```bash
 code --add-mcp "{\"name\":\"imagekit_devtools\",\"type\":\"http\",\"url\":\"https://devtools-mcp.imagekit.io/mcp\"}"
-code --add-mcp "{\"name\":\"imagekit_api\",\"type\":\"http\",\"url\":\"https://api-mcp.imagekit.io/mcp\"}"
+code --add-mcp "{\"name\":\"imagekit_dam\",\"type\":\"http\",\"url\":\"https://imagekit.io/mcp/dam\"}"
+code --add-mcp "{\"name\":\"imagekit_admin\",\"type\":\"http\",\"url\":\"https://imagekit.io/mcp/admin\"}"
 ```
 </details>
 
@@ -123,7 +144,8 @@ code --add-mcp "{\"name\":\"imagekit_api\",\"type\":\"http\",\"url\":\"https://a
 Install with these buttons:
 
 - [![Install DevTools MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en-US/install-mcp?name=imagekit_devtools&config=eyJ1cmwiOiJodHRwczovL2RldnRvb2xzLW1jcC5pbWFnZWtpdC5pby9tY3AifQ%3D%3D)
-- [![Install API MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en-US/install-mcp?name=imagekit_api&config=eyJ1cmwiOiJodHRwczovL2FwaS1tY3AuaW1hZ2VraXQuaW8vbWNwIn0%3D)
+- [![Install DAM MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en-US/install-mcp?name=imagekit_dam&config=eyJ1cmwiOiJodHRwczovL2ltYWdla2l0LmlvL21jcC9kYW0ifQ%3D%3D)
+- [![Install Admin MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en-US/install-mcp?name=imagekit_admin&config=eyJ1cmwiOiJodHRwczovL2ltYWdla2l0LmlvL21jcC9hZG1pbiJ9)
 
 Or edit `~/.cursor/mcp.json`:
 
@@ -131,7 +153,8 @@ Or edit `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "imagekit_devtools": { "url": "https://devtools-mcp.imagekit.io/mcp" },
-    "imagekit_api": { "url": "https://api-mcp.imagekit.io/mcp" }
+    "imagekit_dam": { "url": "https://imagekit.io/mcp/dam" },
+    "imagekit_admin": { "url": "https://imagekit.io/mcp/admin" }
   }
 }
 ```
@@ -146,7 +169,8 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
 {
   "mcpServers": {
     "imagekit_devtools": { "serverUrl": "https://devtools-mcp.imagekit.io/mcp" },
-    "imagekit_api": { "serverUrl": "https://api-mcp.imagekit.io/mcp" }
+    "imagekit_dam": { "serverUrl": "https://imagekit.io/mcp/dam" },
+    "imagekit_admin": { "serverUrl": "https://imagekit.io/mcp/admin" }
   }
 }
 ```

@@ -3,8 +3,11 @@
         "imagekit_devtools": {
             "url": "https://devtools-mcp.imagekit.io/mcp"
         },
-        "imagekit_api": {
-            "url": "https://api-mcp.imagekit.io/mcp"
+        "imagekit_dam": {
+            "url": "https://imagekit.io/mcp/dam"
+        },
+        "imagekit_admin": {
+            "url": "https://imagekit.io/mcp/admin"
         }
     }
 }

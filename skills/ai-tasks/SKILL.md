@@ -67,6 +67,7 @@ Binary quality check with conditional actions.
 
 ## Applying AI Tasks
 
+- **Via DAM MCP**: `list_saved_extensions`, `create_saved_extension`, and `apply_extension_bulk` on `https://imagekit.io/mcp/dam`
 - **Via Saved Extensions**: Create and apply via dashboard/API
 - **Via API at Upload**: Include in `extensions` array
 - **Via Path Policies**: Auto-apply to files in specific folders

@@ -1,85 +1,40 @@
 ---
 name: mcp-preflight
-description: "Routing guide for ImageKit's two MCP servers (imagekit_api and imagekit_devtools) — maps each capability to the correct server and tool, and covers the routing rules (e.g. never upload local files via execute). Use before calling any ImageKit MCP tool. Covers file management, folder ops, cache purge, metadata, docs search, transformation building, and upload routing."
+description: "Routing guide for ImageKit's MCP servers (DAM, Admin, DevTools). Use before any ImageKit MCP call. DAM: media library search, upload, organize, share. Admin: origins, external storage, URL endpoints, account usage, usage analytics. DevTools: docs search and transformation URLs."
 ---
 
 # MCP Preflight
 
-## Read This Before Any ImageKit MCP Call
+ImageKit has three hosted MCP servers. Call the one that matches the job.
 
-You have access to two ImageKit MCP servers. Each serves a different purpose. Calling the wrong server or the wrong tool wastes tokens and produces errors. This skill is your routing table.
+| Job | Server | Then |
+|-----|--------|------|
+| Search, upload, organize, tag, share, metadata, collections, path policies, public links, cache purge | DAM (`https://imagekit.io/mcp/dam`) | See skills below when the task is search, upload, sharing, or AI tasks |
+| Origins / external storage (S3, GCS, Azure, web server, …) | Admin (`https://imagekit.io/mcp/admin`) | `list_origins`, `create_origin`, `get_origin`, `update_origin`, `delete_origin` |
+| URL endpoints | Admin | `list_url_endpoints`, `create_url_endpoint`, `get_url_endpoint`, `update_url_endpoint`, `delete_url_endpoint` |
+| Account usage totals or usage analytics | Admin | `get_account_usage`, `get_account_usage_analytics` |
+| "How do I…", API/SDK details, whether a feature exists | DevTools `search_docs` | Read the `search-docs` skill first |
+| Build a transformation URL | DevTools `transformation_builder` | Read the `transformation-builder` skill first |
+| Integrate ImageKit into an app, CMS, or framework | — | Read `imagekit-integrations` to pick the SDK/plugin, then `search_docs` for details |
 
-## Server Map
+DAM and Admin each need a separate connection and ImageKit sign-in. DevTools does not. If a tool you need is missing, the user has not connected that server (or has not granted that permission).
 
-### `imagekit_api` — Authenticated API Server
+## When a skill actually helps
 
-Prefix: `mcp_imagekit_api_*`
+Most DAM and Admin tools are self-explanatory. Read a companion skill only for the cases below — they have calling conventions that the tool schema does not make obvious.
 
-Two tools only:
+| Task | Skill |
+|------|--------|
+| Search / filter / list assets | `search-assets` — Lucene `searchQuery`, and you must discover custom metadata fields and tags before guessing |
+| Upload a file | `upload-files` — picker vs signed upload; never put file bytes in chat |
+| Who can access a file, folder, or collection; grant or revoke access | `asset-access-control` — file/folder ACL tools are not the same as collection ACL tools |
+| Create or apply AI tagging / metadata / QC workflows | `ai-tasks` — payload shape, vocabularies, and how they attach to saved extensions |
+| Which SDK, plugin, or widget to use for a stack | `imagekit-integrations` — then `search_docs` for implementation details |
 
-| Tool | Purpose |
-|------|----------|
-| `search_doc` | Local search that only searches TypeScript SDK code — use to find method signatures and types |
-| `execute` | Executes TypeScript code against the ImageKit SDK to perform CRUD operations |
+## Rules
 
-All CRUD operations are performed by writing TypeScript code that runs via `execute`:
-
-- List, search, get details of files
-- Delete, move, copy, rename files
-- Create, delete, move, copy folders
-- Bulk tag/untag operations
-- File versions (list, restore, delete)
-- Custom metadata fields (CRUD)
-- Cache invalidation (purge)
-- URL endpoints and origins management
-- Account usage stats
-
-### `imagekit_devtools` — Public Tools Server
-
-Prefix: `mcp_imagekit_devtools_*`
-
-Two tools only — no auth required:
-
-| Tool | Purpose |
-|------|---------|
-| `search_docs` | RAG-powered search across ImageKit docs, guides, API refs, SDKs, community posts |
-| `transformation_builder` | Builds transformation URLs from natural language descriptions |
-
-## Routing Table
-
-| Need | Route To |
-|------|----------|
-| List, delete, move, copy files | `mcp_imagekit_api_execute` (write TS code) |
-| Folder operations | `mcp_imagekit_api_execute` (write TS code) |
-| File metadata, tags, custom fields | `mcp_imagekit_api_execute` (write TS code) |
-| Bulk operations | `mcp_imagekit_api_execute` (write TS code) |
-| Cache purge | `mcp_imagekit_api_execute` (write TS code) |
-| URL endpoints, origins | `mcp_imagekit_api_execute` (write TS code) |
-| Find SDK method signatures/types | `mcp_imagekit_api_search_doc` |
-| **Upload files** | Use `mcp_imagekit_api_execute` with `client.files.upload()` — **only URL-based uploads work; local files cannot be passed**. Read the `upload-files` skill first. |
-| How to do something in ImageKit | `mcp_imagekit_devtools_search_docs` |
-| Build a transformation URL | `mcp_imagekit_devtools_transformation_builder` |
-| Find SDK usage or API parameters | `mcp_imagekit_devtools_search_docs` |
-| Verify feature exists or find limits | `mcp_imagekit_devtools_search_docs` |
-| Search / filter / list assets | `mcp_imagekit_api_execute` (write TS code) — read `search-assets` skill first |
-| Integrate ImageKit into a framework/SDK/CMS | read `imagekit-integrations` skill first |
-
-## Searching / Filtering Assets
-
-When listing assets with `client.assets.list`, **filter on the server** instead of fetching everything and filtering in code. **Read the `search-assets` skill first** — it is the canonical reference for the Lucene-like `searchQuery` syntax, when to use top-level params vs a `searchQuery`, and how to narrow the returned `File`/`Folder` results.
-
-## Integration Use Cases
-
-When the task is to integrate ImageKit into a specific technology (front-end, back-end, mobile, CMS, external storage, upload widgets, URL generation, etc.), **read the `imagekit-integrations` skill** to find the right SDK/plugin and what it covers before writing code.
-
-## Before Calling imagekit_api
-
-**Use the `imagekit-sdk-reference` skill** before constructing any TypeScript code that calls `mcp_imagekit_api_*` tools. That skill provides complete SDK method signatures, parameters, return types, error handling patterns, and examples to ensure correct API calls and proper data handling.
-
-## Critical Rules
-
-1. **Uploads are URL-only** — `client.files.upload()` via `mcp_imagekit_api_execute` only accepts a public URL string. **Local files cannot be uploaded** (no file bytes, streams, or Buffers). Read the `upload-files` skill first.
-2. **ALWAYS call `search_docs` before writing any ImageKit SDK code** — do not rely on training data for method signatures or parameters.
-3. **Do NOT read library source code to figure out usage** — `search_docs` returns official docs and working examples. Only read source code as a last resort when docs fail.
-4. **Use `transformation_builder` instead of hand-crafting transformation URLs** — it knows correct parameter syntax and ordering.
-5. **Filter `client.assets.list` server-side, not in code** — read the `search-assets` skill for how to choose between top-level params and a `searchQuery`.
+1. **DAM for the media library. Admin for origins, URL endpoints, usage, and usage analytics.** Do not search DAM for origins or usage, and do not look for file tools on Admin.
+2. **Never inline file bytes** (no base64, no paths as file contents). See `upload-files`.
+3. **Filter search on the server** with `search_media_library`. See `search-assets`.
+4. **Use `transformation_builder`** instead of hand-crafting transformation URLs.
+5. **Use `search_docs`** before writing ImageKit integration code. Do not rely on training data for method names or parameters. If you need to pick an SDK or plugin first, read `imagekit-integrations`.

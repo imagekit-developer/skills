@@ -98,7 +98,7 @@ Native plugins that route media through ImageKit from your existing platform —
 
 ### External Storage (origins)
 
-Connect your existing storage as an ImageKit origin so it optimizes and delivers files already there — no re-uploading or migration needed.
+Connect your existing storage as an ImageKit origin so it optimizes and delivers files already there — no re-uploading or migration needed. To create or update origins and URL endpoints on the user's live account, use the **Admin MCP** tools (`create_origin`, `create_url_endpoint`, …) — see `mcp-preflight`. For setup guides, query `search_docs`.
 
 | Provider | Guide |
 |----------|-------|
