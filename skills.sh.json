@@ -21,10 +21,8 @@
     },
     {
       "title": "Admin",
-      "description": "Origins, URL endpoints, account usage, and usage analytics on the Admin MCP server.",
-      "skills": [
-        "admin"
-      ]
+      "description": "Origins, URL endpoints, account usage, and usage analytics. Use the Admin MCP tools directly — no companion skill.",
+      "skills": []
     },
     {
       "title": "DevTools",
