@@ -15,6 +15,7 @@ Reusable AI agent skills for [ImageKit.io](https://imagekit.io) — install them
 | **ai-tasks** | Payload shape for AI tagging, metadata extraction, and quality checks on DAM assets |
 | **search-docs** | How to query DevTools `search_docs` (query rewriting and source selection) |
 | **transformation-builder** | How to query DevTools `transformation_builder` for correct transformation URLs |
+| **imagekit-integrations** | Index of ImageKit SDKs, plugins, and widgets — pick the right one for a stack, then search the docs |
 
 ## Installation
 

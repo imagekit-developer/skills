@@ -26,6 +26,13 @@
         "search-docs",
         "transformation-builder"
       ]
+    },
+    {
+      "title": "Integrations",
+      "description": "Which ImageKit SDK, plugin, or widget to use before searching the docs.",
+      "skills": [
+        "imagekit-integrations"
+      ]
     }
   ]
 }
