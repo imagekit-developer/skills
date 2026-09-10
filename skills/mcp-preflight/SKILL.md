@@ -5,7 +5,7 @@ description: "Routing guide for ImageKit's MCP servers (DAM, Admin, DevTools). U
 
 # MCP Preflight
 
-ImageKit has three hosted MCP servers. Call the one that matches the job. Do not write SDK code to operate the user's account.
+ImageKit has three hosted MCP servers. Call the one that matches the job.
 
 | Job | Server | Then |
 |-----|--------|------|
