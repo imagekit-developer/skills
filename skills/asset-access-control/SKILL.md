@@ -14,7 +14,7 @@ Use the **DAM MCP** tools. Two surfaces — do not mix their tools.
 
 `list_associated_media_collections` only answers "which collections contain this file/folder?". It does not change membership; use `add_assets_to_media_collection` / `remove_assets_from_media_collection`.
 
-Scope: `mcp_media_library:update`. Restricted users can only change ACLs on assets they can manage.
+Restricted users can only change access on assets they can manage.
 
 ## Workflow
 

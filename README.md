@@ -8,15 +8,13 @@ Reusable AI agent skills for [ImageKit.io](https://imagekit.io) — install them
 
 | Skill | Description |
 |-------|-------------|
-| **mcp-preflight** | Mandatory routing guide — tells the agent which MCP server (DAM, Admin, or DevTools) to call for what, before every ImageKit tool invocation |
-| **imagekit-sdk-reference** | TypeScript SDK reference — method signatures, types (File, Folder), error handling, and examples for `@imagekit/nodejs` |
-| **imagekit-integrations** | Index of ImageKit SDKs, plugins, and integrations across front-end, back-end, mobile, CMS, storage, video, upload widgets, and URL generation |
-| **search-assets** | Filter and search ImageKit files and folders using the Lucene-like `searchQuery` syntax, operators, and field reference |
-| **asset-access-control** | Share or revoke access on files, folders, and media collections via DAM MCP |
-| **search-docs** | Search ImageKit documentation with optimized queries and source selection |
-| **transformation-builder** | Build ImageKit image/video transformations — AI editing, background removal, resize, crop, overlays, and more |
-| **upload-files** | Upload files to the ImageKit media library via DAM MCP (`upload_file` picker or `create_upload_signature`) |
-| **ai-tasks** | Apply AI-powered analysis to images for business-specific tagging, metadata extraction, and quality checks using controlled vocabularies |
+| **mcp-preflight** | Which MCP server to call (DAM, Admin, or DevTools), and when a companion skill is worth reading |
+| **search-assets** | Lucene `searchQuery` for DAM `search_media_library` — discover custom metadata and tags before guessing |
+| **upload-files** | DAM uploads via `upload_file` (picker) or `create_upload_signature` — never inline file bytes |
+| **asset-access-control** | File/folder vs media-collection ACL tools, and the write rules that are easy to get wrong |
+| **ai-tasks** | Payload shape for AI tagging, metadata extraction, and quality checks on DAM assets |
+| **search-docs** | How to query DevTools `search_docs` (query rewriting and source selection) |
+| **transformation-builder** | How to query DevTools `transformation_builder` for correct transformation URLs |
 
 ## Installation
 

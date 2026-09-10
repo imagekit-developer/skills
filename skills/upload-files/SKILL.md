@@ -1,59 +1,42 @@
 ---
 name: upload-files
-description: "Upload files to the ImageKit media library. Use when uploading images, videos, or files; specifying folder paths, tags, or metadata. Prefer the DAM upload_file tool (interactive picker) for local files; use create_upload_signature for URL or CLI uploads. Never inline file bytes into the conversation."
+description: "Upload files to the ImageKit media library via DAM MCP. Use upload_file (interactive picker) for local files; create_upload_signature for a public URL or CLI upload. Never inline file bytes into the conversation."
 ---
 
-# Upload Files to ImageKit
+# Upload files
 
-Uploads go through the **DAM MCP server** (`https://imagekit.io/mcp/dam`). Do not look for an `execute` tool or `client.files.upload()` over MCP.
+Uploads go through DAM (`https://imagekit.io/mcp/dam`).
 
-**NEVER convert a local file to a base64 (data URI) string and try to upload it.** Reading a file into the model context burns a huge number of tokens and still fails for large files. Never pass file bytes, Buffers, or streams as tool arguments.
+**Never put file bytes in the conversation or a tool argument.** No base64, data URIs, Buffers, or streams. That burns tokens and fails for large files.
 
-## Choose a path
+## Which tool
 
-| Situation | What to call |
-|-----------|----------------|
-| User wants to pick a local file, or the client supports MCP Apps | `upload_file` — **no parameters**. Opens an interactive picker (filename, folder, tags, custom metadata). |
-| User has a **public URL**, or the client has no MCP Apps | `create_upload_signature`, then POST multipart from the **user's environment** using the returned `formFields` and `curlExample`. |
-| User is writing **application code** (Node, browser, etc.) | Read the `imagekit-sdk-reference` skill and `search_docs`. Do not upload via MCP unless they asked you to put the file in their live library. |
+| Situation | Call |
+|-----------|------|
+| User wants to pick a file on their computer, or the client can show MCP Apps | `upload_file` with **no parameters**. Opens a picker (filename, folder, tags, custom metadata). |
+| User has a **public URL**, or the client has no picker | `create_upload_signature`, then POST from the **user's environment** using the returned `formFields` and `curlExample`. |
 
-`upload_file` injects `clientNumber` from the OAuth token. Folder suggestions use `search_media_library` with `searchQuery: type = "folder"`. Tag suggestions use `list_client_tags`. Metadata fields come from `list_custom_metadata_fields` for that folder (path-policy overlays apply).
+If they asked you to write upload code for their app, use `search_docs` — do not upload to their library unless they asked for that.
 
-## `create_upload_signature` (URL or CLI)
+## `create_upload_signature`
 
-This tool never receives or returns file contents. The response contains:
+This tool never receives file contents. The response includes `formFields` (send these exactly) and `curlExample`.
 
-- `token`
-- `formFields` — the exact multipart fields the signature is bound to
-- `curlExample` — a ready-to-run command with a file-path placeholder
-
-To upload, POST multipart/form-data from the user's environment:
+POST multipart/form-data from the user's environment:
 
 - `file=@<LOCAL_FILE_PATH>` for a file on disk, or
-- `file=<PUBLIC_URL>` to have ImageKit fetch a publicly accessible URL
+- `file=<PUBLIC_URL>` to have ImageKit fetch that URL
 
-plus **every** `formFields` entry exactly as returned. Do not add, remove, or re-serialize fields. One signature covers one file; call again for each file.
-
-Scope: `mcp_media_library:write`.
+plus every `formFields` entry as returned. Do not add, remove, or re-serialize fields. One signature is one file; call again for each file.
 
 ## Procedure
 
-1. **Confirm destination.** Folder path, filename, tags, and any custom metadata. Custom metadata fields must already exist in the DAM (`list_custom_metadata_fields`).
-2. **Pick the upload path** from the table above.
-3. **If using `upload_file`:** call it with no arguments and let the user complete the picker.
-4. **If using `create_upload_signature`:** call it, then run the returned upload command in the user's environment. Never paste file contents into chat.
-5. **Verify:** the library should show a new file (`search_media_library` or the upload response). Check `fileId` / URL when returned.
+1. Confirm folder, filename, tags, and custom metadata. Fields must already exist (`list_custom_metadata_fields`).
+2. Call `upload_file` or `create_upload_signature` as above.
+3. Confirm the file landed with `search_media_library` or the upload response.
 
 ## Notes
 
-- `folder` is the ImageKit media library path (not a local path). Starts with `/`; nested folders are created as needed. Do not put the filename in the folder path.
+- Folder is a media-library path starting with `/`, not a local path. Nested folders are created as needed.
 - Filenames allow `a-z`, `A-Z`, `0-9`, `.`, `-`. Other characters become `_`.
-- File size limits: Free plan 25MB images / 100MB videos. Paid plans are higher.
-- Version limit: max 100 versions per file.
-
-## Error Prevention
-
-- **No file bytes in tool arguments or chat.** Use `upload_file` or a shell POST with `file=@...` / `file=<URL>`.
-- **Never base64-encode a file to upload it.**
-- **Do not skip `formFields`.** The signature is bound to those fields; changing them makes the upload fail.
-- **Write scope required.** If the tool returns `insufficient_scope`, the user must grant `mcp_media_library:write` on the DAM consent screen.
+- Free plan limits: 25MB images, 100MB videos. Max 100 versions per file.

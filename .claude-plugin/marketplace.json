@@ -13,7 +13,7 @@
       "name": "imagekit-plugin",
       "displayName": "ImageKit Plugin",
       "source": "./",
-      "description": "Provides MCP server integrations for ImageKit DAM, Admin, and DevTools — media library management, account settings, SDK reference, and resource management",
+      "description": "MCP servers and skills for ImageKit DAM, Admin, and DevTools — media library, origins, URL endpoints, usage, docs search, and transformations",
       "version": "1.2.0",
       "author": {
         "name": "ImageKit",

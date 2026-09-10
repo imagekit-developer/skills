@@ -3,24 +3,28 @@
   "notGrouped": "bottom",
   "groupings": [
     {
-      "title": "General",
-      "description": "Routing and documentation skills that apply before any ImageKit MCP call.",
+      "title": "Routing",
+      "description": "Which MCP server to call, and when a companion skill is worth reading.",
       "skills": [
-        "mcp-preflight",
-        "imagekit-sdk-reference",
-        "imagekit-integrations",
-        "search-assets",
-        "asset-access-control"
+        "mcp-preflight"
       ]
     },
     {
-      "title": "MCP Tools",
-      "description": "Skills for specific ImageKit operations — transformations, search docs, uploads, and AI tasks.",
+      "title": "DAM",
+      "description": "Calling conventions the DAM tools do not make obvious on their own.",
+      "skills": [
+        "search-assets",
+        "upload-files",
+        "asset-access-control",
+        "ai-tasks"
+      ]
+    },
+    {
+      "title": "DevTools",
+      "description": "How to query the public docs-search and transformation-builder tools.",
       "skills": [
         "search-docs",
-        "transformation-builder",
-        "upload-files",
-        "ai-tasks"
+        "transformation-builder"
       ]
     }
   ]
