@@ -20,11 +20,6 @@
       ]
     },
     {
-      "title": "Admin",
-      "description": "Origins, URL endpoints, account usage, and usage analytics. Use the Admin MCP tools directly — no companion skill.",
-      "skills": []
-    },
-    {
       "title": "DevTools",
       "description": "How to query the public docs-search and transformation-builder tools.",
       "skills": [
