@@ -4,7 +4,7 @@
   "groupings": [
     {
       "title": "Routing",
-      "description": "Which MCP server to call, and when a companion skill is worth reading.",
+      "description": "Which MCP server to call: DAM (media library), Admin (origins, URL endpoints, usage analytics), or DevTools.",
       "skills": [
         "mcp-preflight"
       ]

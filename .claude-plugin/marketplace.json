@@ -5,7 +5,7 @@
     "name": "ImageKit",
     "email": "developer@imagekit.io"
   },
-  "description": "ImageKit development tools marketplace with DAM, Admin, and DevTools MCP servers, transformation builders, and document search",
+  "description": "ImageKit DAM, Admin, and DevTools MCP servers — media library, origins, URL endpoints, usage analytics, transformations, and document search",
   "homepage": "https://imagekit.io",
   "repository": "https://github.com/imagekit-developer/skills",
   "plugins": [
@@ -13,7 +13,7 @@
       "name": "imagekit-plugin",
       "displayName": "ImageKit Plugin",
       "source": "./",
-      "description": "MCP servers and skills for ImageKit DAM, Admin, and DevTools — media library, origins, URL endpoints, usage, docs search, and transformations",
+      "description": "MCP servers and skills for ImageKit DAM, Admin, and DevTools — media library, origins, URL endpoints, usage analytics, docs search, and transformations",
       "version": "1.2.0",
       "author": {
         "name": "ImageKit",
@@ -25,6 +25,10 @@
         "imagekit",
         "mcp",
         "dam",
+        "admin",
+        "origins",
+        "url-endpoints",
+        "usage-analytics",
         "transformation",
         "media-management"
       ]

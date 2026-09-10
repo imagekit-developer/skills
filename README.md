@@ -8,7 +8,7 @@ Reusable AI agent skills for [ImageKit.io](https://imagekit.io) — install them
 
 | Skill | Description |
 |-------|-------------|
-| **mcp-preflight** | Which MCP server to call (DAM, Admin, or DevTools), and when a companion skill is worth reading |
+| **mcp-preflight** | Which MCP server to call: DAM (media library), Admin (origins, URL endpoints, usage analytics), or DevTools |
 | **search-assets** | Lucene `searchQuery` for DAM `search_media_library` — discover custom metadata and tags before guessing |
 | **upload-files** | DAM uploads via `upload_file` (picker) or `create_upload_signature` — never inline file bytes |
 | **asset-access-control** | File/folder vs media-collection ACL tools, and the write rules that are easy to get wrong |
@@ -28,6 +28,14 @@ There are two pieces to install: the **skills** (this repo) and the **MCP server
 | `imagekit_admin` | `https://imagekit.io/mcp/admin` | Sign in with your ImageKit account |
 
 If you previously connected `https://api-mcp.imagekit.io/mcp`, remove it and add DAM and Admin instead.
+
+What each server does:
+
+| Server | Use it to |
+|--------|-----------|
+| DAM | Search, upload, organize, tag, share, and manage the media library |
+| Admin | Manage origins (external storage), URL endpoints, account usage, and usage analytics |
+| DevTools | Search the docs and build transformation URLs (no sign-in) |
 
 Pick one of the two methods below. Restart your editor after installing so the MCP servers take effect. Authenticate DAM and Admin when prompted.
 
