@@ -39,3 +39,4 @@ plus every `formFields` entry as returned. Do not add, remove, or re-serialize f
 
 - Folder is a media-library path starting with `/`, not a local path. Nested folders are created as needed.
 - Free plan limits: 25MB images, 100MB videos. Max 100 versions per file.
+- To preserve a migrated asset's original creation date, set the reserved `_internal_original_created_datetime` custom metadata key to an ISO 8601 string. It exists only on accounts that enabled the original creation date setting; check `list_custom_metadata_fields` for it (`reserved: true`).
