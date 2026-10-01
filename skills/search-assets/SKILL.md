@@ -29,7 +29,7 @@ Select types: `SingleSelect` → `=` / `IN`; `MultiSelect` → `IN` / `NOT IN`. 
 | `path` | Folder scope, e.g. `/products`. |
 | `type` | `file` / `file-version` / `folder` / `all`. Honored only when `searchQuery` is omitted. |
 | `fileType` | `image` / `non-image` / `all`. |
-| `sort` | e.g. `DESC_CREATED`. Pair `HAS` with `DESC_RELEVANCE`. |
+| `sort` | `ASC_`/`DESC_` + `CREATED` (default `ASC_CREATED`), `UPDATED`, `NAME`, `SIZE`, `WIDTH`, `HEIGHT`, `DURATION`, `RELEVANCE`, `ORIGINAL_CREATION_DATE`. Pair `HAS` with `DESC_RELEVANCE`. `*_ORIGINAL_CREATION_DATE` orders by the reserved `_internal_original_created_datetime` field; files without a value fall back to upload time. |
 | `limit` / `skip` | Page size (max 1000) and offset. Default page is 20. |
 
 Put a simple folder scope in `path` and file vs non-image in `fileType`. Whenever `searchQuery` is set, put type in `searchQuery` (`type = "folder"`, or `(name HAS "logo") AND type = "folder"`). The `type` argument is ignored in that case and results default to files.
@@ -52,11 +52,12 @@ Put a simple folder scope in `path` and file vs non-image in `fileType`. Wheneve
 | `createdAt` / `updatedAt` | `=` `<` `<=` `>` `>=` `IN` `NOT =` `NOT IN` | ISO 8601 or relative (`"1h"` `"2d"` `"3w"` `"4m"` `"1y"`) |
 | `width` / `height` | `=` `<` `<=` `>` `>=` `IN` `NOT =` `NOT IN` | Pixels; images only |
 | `size` | `=` `<` `<=` `>` `>=` `IN` `NOT =` `NOT IN` | Bytes (`1024`) or `"1mb"` / `"10kb"` |
+| `videoDuration` | `=` `<` `<=` `>` `>=` `IN` `NOT =` `NOT IN` | Videos only. Quoted with unit: `"30sec"` `"1.5min"` `"2hr"` (or `s`/`m`/`h`); a bare number is seconds |
 | `format` | `=` `IN` | `"jpg"` `"png"` `"webp"` `"gif"` `"svg"` `"avif"` `"pdf"` `"mp4"` … |
 | `private` / `published` / `transparency` | `=` | Boolean, unquoted |
 | `createdBy` | `=` `IN` `NOT =` `NOT IN` | Uploader email |
 | `path` | `=` `:` `IN` `NOT =` `NOT IN` | `=` exact folder; `:` folder + subfolders |
-| `"customMetadata.<field>"` | type-dependent | Quote the field name. Discover via `list_custom_metadata_fields`. |
+| `"customMetadata.<field>"` | type-dependent | Quote the field name. Discover via `list_custom_metadata_fields`. The reserved `_internal_original_created_datetime` (Date, label "Original creation date") is listed with `reserved: true` only on accounts that enabled it |
 | `"embeddedMetadata.<field>"` | type-dependent | From the file, not the DAM schema. `Keywords` uses `IN`/`EXISTS`; `DateTimeOriginal` uses date ops; `LocationTaken` supports geo (`"40,100 5km"`) |
 
 ## Examples
@@ -74,6 +75,8 @@ path : "/sales-banner/"
 "customMetadata.Region" IN ["EMEA"]
 "customMetadata.rating" > 4.3
 "embeddedMetadata.DateTimeOriginal" > "1y"
+videoDuration > "1min" AND format = "mp4"
+"customMetadata._internal_original_created_datetime" < "2021-01-01"
 (size < "1mb" AND width > 500) OR (tags IN ["summer-sale", "banner"])
 ```
 
@@ -85,6 +88,7 @@ User says "Nike assets" → `list_custom_metadata_fields` finds `brand` / option
 - `tags` queries search both `tags` and `AITags`.
 - `HAS` tokenizes on spaces/punctuation; the last token matches as a prefix. Pair with `sort: DESC_RELEVANCE`.
 - Booleans (`private`, `published`, `transparency`) are unquoted; string values are quoted.
-- `width` / `height` / `transparency` apply to images only.
+- `width` / `height` / `transparency` apply to images only; `videoDuration` applies to videos only. Units are `sec` / `min` / `hr`, not `minutes` / `hours`.
+- Sort by `ASC_ORIGINAL_CREATION_DATE` / `DESC_ORIGINAL_CREATION_DATE` only when `list_custom_metadata_fields` returns `_internal_original_created_datetime`; otherwise use `*_CREATED`.
 - `"customMetadata.<field>"` only matches fields defined on the account. Quote the whole token.
 - The `type` tool argument is ignored whenever `searchQuery` is set. Put `type = "folder"` (or `type IN [...]`) in `searchQuery` instead.
