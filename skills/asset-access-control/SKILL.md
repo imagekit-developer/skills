@@ -9,7 +9,7 @@ Use the **DAM MCP** tools. Two surfaces — do not mix their tools.
 
 | Target | Read ACL | Write ACL |
 |--------|----------|-----------|
-| File or folder | `build_access_list` | `update_asset_acl` |
+| File or folder | `get_asset_access_list` | `update_asset_acl` |
 | Media collection | `get_collection_access_list` | `update_media_collection` (`acl`) |
 
 `list_associated_media_collections` only answers "which collections contain this file/folder?". It does not change membership; use `add_assets_to_media_collection` / `remove_assets_from_media_collection`.
@@ -22,7 +22,7 @@ Restricted users can only change access on assets they can manage.
 2. Read the current ACL. Use `userId` / `groupId` from that response — never invent ids.
 3. Write the change. Then re-read if you need to confirm.
 
-`build_access_list` also returns `users` and `userGroups` for the account. Match the person the user named against `userName` / `userEmail` / `label`.
+`get_asset_access_list` also returns `users` and `userGroups` for the account. Match the person the user named against `userName` / `userEmail` / `label`.
 
 ## `update_asset_acl`
 

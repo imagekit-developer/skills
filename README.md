@@ -10,7 +10,7 @@ Reusable AI agent skills for [ImageKit.io](https://imagekit.io) — install them
 |-------|-------------|
 | **mcp-preflight** | Which MCP server to call: DAM (media library), Admin (origins, URL endpoints, usage analytics), or DevTools |
 | **search-assets** | Lucene `searchQuery` for DAM `search_media_library` — discover custom metadata and tags before guessing |
-| **upload-files** | DAM uploads via `upload_file` (picker) or `create_upload_signature` — never inline file bytes |
+| **upload-files** | DAM uploads via `create_upload_signatures_in_bulk` (any number of files, from a shell) or the `upload_file` picker — never inline file bytes |
 | **asset-access-control** | File/folder vs media-collection ACL tools, and the write rules that are easy to get wrong |
 | **ai-tasks** | Payload shape for AI tagging, metadata extraction, and quality checks on DAM assets |
 | **search-docs** | How to query DevTools `search_docs` (query rewriting and source selection) |
