@@ -26,7 +26,7 @@ Most DAM and Admin tools are self-explanatory. Read a companion skill only for t
 | Task | Skill |
 |------|--------|
 | Search / filter / list assets | `search-assets` — Lucene `searchQuery`, and you must discover custom metadata fields and tags before guessing |
-| Upload a file | `upload-files` — picker vs signed upload; never put file bytes in chat |
+| Upload files | `upload-files` — picker, signed upload, or bulk upload command; never put file bytes in chat |
 | Who can access a file, folder, or collection; grant or revoke access | `asset-access-control` — file/folder ACL tools are not the same as collection ACL tools |
 | Create or apply AI tagging / metadata / QC workflows | `ai-tasks` — payload shape, vocabularies, and how they attach to saved extensions |
 | Which SDK, plugin, or widget to use for a stack | `imagekit-integrations` — then `search_docs` for implementation details |

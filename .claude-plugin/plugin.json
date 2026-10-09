@@ -2,7 +2,7 @@
     "name": "imagekit-plugin",
     "displayName": "ImageKit Plugin",
     "description": "MCP servers and skills for ImageKit DAM, Admin, and DevTools — media library, origins, URL endpoints, usage analytics, docs search, and transformations",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "author": {
         "name": "ImageKit",
         "email": "developer@imagekit.io"
